@@ -5,3 +5,9 @@ services:
       - ./backend:/workdir
     ports:
       - 8000:8000
+  frontend:
+    build: ./frontend
+    volumes:
+      - ./frontend:/workdir
+    ports:
+      - 3000:3000
