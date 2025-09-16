@@ -8,7 +8,7 @@ RUN apt-get update
 RUN apt-get install -y zip
 
 COPY . .
-WORKDIR /workdir/indian_poker
+WORKDIR /workdir/laravel_poker
 RUN composer install
 CMD ["php", "artisan", "serve", "--host", "0.0.0.0"]
 EXPOSE 8000
