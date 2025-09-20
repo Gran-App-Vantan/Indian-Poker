@@ -10,4 +10,13 @@ services:
     volumes:
       - ./frontend:/workdir
     ports:
-      - 3000:3000
+      - 3010:3000
+  db:
+    image: mysql:8.3
+    volumes:
+      - ./backend/laravel_poker/mysql_data:/var/lib/mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: dev
+    ports:
+      - 3306:3306

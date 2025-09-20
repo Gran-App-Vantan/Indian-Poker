@@ -7,6 +7,8 @@ ENV PATH="$PATH:/opt/composer/vendor/bin"
 RUN apt-get update
 RUN apt-get install -y zip
 
+RUN docker-php-ext-install pdo_mysql
+
 COPY . .
 WORKDIR /workdir/laravel_poker
 RUN composer install
