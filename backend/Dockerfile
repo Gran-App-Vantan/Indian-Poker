@@ -12,5 +12,5 @@ RUN docker-php-ext-install pdo_mysql
 COPY . .
 WORKDIR /workdir/laravel_poker
 RUN composer install
-CMD ["php", "artisan", "serve", "--host", "0.0.0.0"]
+CMD ["sh", "-c", "composer install && php artisan key:generate --force && php artisan serve --host 0.0.0.0"]
 EXPOSE 8000
