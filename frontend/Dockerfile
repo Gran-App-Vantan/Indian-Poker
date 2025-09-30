@@ -6,5 +6,5 @@ WORKDIR /frontend/next-poker
 
 RUN npm install
 
-CMD ["npm", "run", "dev"]
+CMD ["sh", "-c", "npm install && npm run dev"]
 EXPOSE 3000
