@@ -3,6 +3,7 @@
 import Image from "next/image";
 import styles from "../app/StartPage.module.css"
 import {Logo} from "@/components/features/start/Logo";
+import { StartButton } from "@/components/features/start/StartButon";
 
 export default function Home() {
   return (
@@ -11,23 +12,25 @@ export default function Home() {
 
       <Logo />
         
-      <div className="absolute bottom-0 left-0 z-0 ">
+      <div className="absolute bottom-12 left-0 z-0 ">
           <Image
-          src="/light.svg"
+          src="/start/light.svg"
           alt="light-left"
           width={700}
           height={700}
           />
       </div>
 
-      <div className="absolute bottom-0 right-0 z-0  scale-x-[-1] ">
+      <div className="absolute bottom-12 right-0 z-0  scale-x-[-1] ">
           <Image
-          src="/light.svg"
+          src="/start/light.svg"
           alt="light-right"
           width={700}
           height={700}
           />
       </div>
+
+      <StartButton />
         
     </div>
   );
