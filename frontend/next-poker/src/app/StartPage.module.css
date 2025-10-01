@@ -1,11 +1,11 @@
 /* 背景の横スクロールアニメーション */
-@keyframes scroll-x {
-  0% { background-position-x: 0; }
-  100% { background-position-x: 1280px; } 
+@keyframes scrollx {
+    0% { background-position-x: 0; }
+    100% { background-position-x: 1280px; } 
 }
 
-.bg-scroll-x {
-  background-repeat: repeat-x;
-  background-size: auto 100%;
-  animation: scroll-x 40s linear infinite;
+.bgScrollX {
+    background-repeat: repeat-x;
+    background-size: auto 100%;
+    animation: scrollx 40s linear infinite;
 }
