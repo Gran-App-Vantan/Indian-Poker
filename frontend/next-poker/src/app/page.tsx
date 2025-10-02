@@ -12,18 +12,18 @@ export default function Home() {
 
       <Logo />
         
-      <div className="absolute bottom-12 left-0 z-0 ">
+      <div className={`absolute bottom-25 left-0 z-0 ${styles.swingImageLeft }`}>
           <Image
-          src="/start/light.svg"
+          src="/start/LightLeft.svg"
           alt="light-left"
           width={700}
           height={700}
           />
       </div>
 
-      <div className="absolute bottom-12 right-0 z-0  scale-x-[-1] ">
+      <div className={`absolute bottom-25 right-0 z-0 overflow-hidden ${styles.swingImageRight }`}>
           <Image
-          src="/start/light.svg"
+          src="/start/LightRight.svg"
           alt="light-right"
           width={700}
           height={700}
