@@ -15,5 +15,6 @@ class Playinguser extends Model
         'latch',
         'user_id',
         'status',
+        'game_id', // tukutta
     ];
 }
