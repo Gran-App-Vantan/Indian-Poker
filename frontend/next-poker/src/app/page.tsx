@@ -12,7 +12,7 @@ export default function Home() {
 
       <Logo />
         
-      <div className={`absolute bottom-25 left-0 z-0 ${styles.swingImageLeft }`}>
+      <div className={`absolute bottom-25 left-0 z-0  ${styles.swingImageLeft }`}>
           <Image
           src="/start/LightLeft.svg"
           alt="light-left"
