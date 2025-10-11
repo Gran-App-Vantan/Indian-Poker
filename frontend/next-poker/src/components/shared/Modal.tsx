@@ -17,8 +17,8 @@ export function Modal ({size,openModal,children,onClose}:ModalProps) {
         transition-all duration-300 ease-out transform bg-black/65 ">
             <dialog 
                 open={openModal}
-                className={`flex items-center justify-center m-auto p-4
-                gradation-red  rounded-modal overflow-hidden  bg-black/80 
+                className={`flex items-center justify-center m-auto
+                gradation-red  rounded-custom overflow-hidden  bg-black/80  
                 ${
                     size === "normal"
                     ? "w-[865px] h-[541px]"
