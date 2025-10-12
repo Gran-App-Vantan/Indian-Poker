@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { Modal } from "@/components/shared/Modal";
 import{LoginButton} from"@/components/features/start/LoginButton";
+import {Qr} from"@/components/features/start/Qr";
 
 export default function Test() {
     const [showModal, setShowModal] = useState(false);
@@ -15,7 +16,7 @@ export default function Test() {
             onClose={() => setShowModal(false)}
         >
             <div>
-                <LoginButton/>
+                <Qr />
             </div>
         </Modal>
         </div>
