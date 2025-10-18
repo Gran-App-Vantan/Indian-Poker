@@ -1,9 +1,10 @@
 "use client";
-import { useState, useEffect } from 'react';
+import { useState, useEffect} from 'react';
 import Image from 'next/image';
 
 export function OperationInstructions() {
     const [currentStep, setCurrentStep] = useState(0);
+    const [isOpen, setIsOpen] = useState(true);
 
     const Steps = [
         {
@@ -52,6 +53,7 @@ export function OperationInstructions() {
         },
     ]
 
+        
 
     return(
         <div className="w-full h-screen flex justify-center items-center bg-black/80">
@@ -78,15 +80,17 @@ export function OperationInstructions() {
                         <p>{Steps[currentStep].bottonText2}</p>
                     </div>
 
-                    <div className='flex justify-center items-center w-[168px] h-[115px] 
-                    absolute bottom-0 right-0 bg-gray rounded-tl-3xl rounded-br-3xl'>
+                    <button className='flex justify-center items-center w-[168px] h-[115px] 
+                        absolute bottom-0 right-0 bg-gray rounded-tl-3xl rounded-br-3xl '
+                    >
                         <Image
                             src="/start/EnterImg.png"
                             alt="next-button"
                             width={58}
                             height={71}
+                            className='hover:cursor-pointer hover:scale-95'
                             />
-                    </div>
+                    </button>
 
                 </div>
 

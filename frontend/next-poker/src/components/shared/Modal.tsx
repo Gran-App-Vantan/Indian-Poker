@@ -22,7 +22,7 @@ export function Modal ({size,openModal,children,onClose}:ModalProps) {
                 ${
                     size === "normal"
                     ? "w-[865px] h-[541px]"
-                    : "w-[989px] h-[639px]"
+                    : "w-[1206px] h-[704px]"
                 }`}>
                 {children}
             </dialog>
