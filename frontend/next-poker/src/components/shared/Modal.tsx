@@ -1,31 +1,23 @@
 "use client";
-import { useRef, useEffect, useState } from "react";
 
 export type ModalProps = {
-    size:"normal"|"large";
-    openModal: boolean;
-    children:React.ReactNode;
+    isOpen: boolean;
     onClose: () => void;
+    children: React.ReactNode;
 };
 
-export function Modal ({size,openModal,children,onClose}:ModalProps) {
-
-
+export function Modal({ isOpen, onClose, children }: ModalProps) {
+    if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 z-50 flex justify-center items-center
-        transition-all duration-300 ease-out transform bg-black/65 ">
-            <dialog 
-                open={openModal}
-                className={`flex items-center justify-center m-auto
-                gradation-red  rounded-custom overflow-hidden  bg-black/80  
-                ${
-                    size === "normal"
-                    ? "w-[865px] h-[541px]"
-                    : "w-[989px] h-[639px]"
-                }`}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center transition-all duration-300 ease-out transform">
+            <div
+                className="absolute inset-0 bg-black/65"
+                onClick={onClose}
+            />
+            <div>
                 {children}
-            </dialog>
+            </div>
         </div>
-    )
+    );
 }
