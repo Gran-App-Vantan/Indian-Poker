@@ -1,10 +1,12 @@
 "use client";
 import { useState, useEffect} from 'react';
 import Image from 'next/image';
+import { Modal } from '@/components/shared/Modal';
+import { Stanby } from '@/components/features/start/Standby';
 
 export function OperationInstructions() {
-    const [currentStep, setCurrentStep] = useState(0);
-    const [isOpen, setIsOpen] = useState(true);
+    const [currentStep] = useState(0);
+    
 
     const Steps = [
         {
@@ -53,8 +55,6 @@ export function OperationInstructions() {
         },
     ]
 
-        
-
     return(
         <div className="w-full h-screen flex justify-center items-center bg-black/80">
 
@@ -91,10 +91,9 @@ export function OperationInstructions() {
                             className='hover:cursor-pointer hover:scale-95'
                             />
                     </button>
-
                 </div>
-
             </div>
+
         </div>
     );
 };
