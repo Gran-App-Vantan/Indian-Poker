@@ -1,12 +1,18 @@
 "use client";
-import { useState, useEffect} from 'react';
+import { useState, useEffect, use} from 'react';
 import Image from 'next/image';
-import { Modal } from '@/components/shared/Modal';
-import { Stanby } from '@/components/features/start/Standby';
 
-export function OperationInstructions() {
-    const [currentStep] = useState(0);
+export type OperationInstructionsProps = {
+    onComplete?: () => void;
+};
+
+export function OperationInstructions({
+    onComplete
+}: OperationInstructionsProps) {
     
+    const [currentStep, setCurrentStep] = useState(0);
+
+        
 
     const Steps = [
         {
@@ -55,6 +61,24 @@ export function OperationInstructions() {
         },
     ]
 
+    useEffect(() => {
+        const handleKeyDown = (event: KeyboardEvent) => {
+            if (event.key === 'Enter') {
+                if (currentStep < Steps.length - 1) {
+                    setCurrentStep(currentStep + 1);
+                } else {
+                    onComplete?.();
+                }
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+
+        return () => {
+            window.removeEventListener('keydown', handleKeyDown);
+        };
+    }, [currentStep, onComplete]);
+
     return(
         <div className="w-full h-screen flex justify-center items-center bg-black/80">
 
@@ -82,6 +106,13 @@ export function OperationInstructions() {
 
                     <button className='flex justify-center items-center w-[168px] h-[115px] 
                         absolute bottom-0 right-0 bg-gray rounded-tl-3xl rounded-br-3xl '
+                        onClick={() => {
+                            if (currentStep < Steps.length - 1) {
+                                setCurrentStep(currentStep + 1);
+                            } else {
+                                onComplete?.();
+                            }
+                        }}
                     >
                         <Image
                             src="/start/EnterImg.png"

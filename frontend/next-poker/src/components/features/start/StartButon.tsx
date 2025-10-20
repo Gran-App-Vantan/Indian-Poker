@@ -4,9 +4,10 @@ import { Modal } from '@/components/shared/Modal';
 import { OperationInstructions } from './OperationInstructions';
 import { LoginModalContent } from './LoginModalContent';
 import { Qr } from './Qr';
+import { Stanby } from './Standby';
 
 export function StartButton() {
-    const [modalType, setModalType] = useState<"login" | "operation" | "Qr" | null>(null);
+    const [modalType, setModalType] = useState<"login" | "operation" | "Qr" | "standby" | null>(null);
 
     return (
         <>
@@ -33,12 +34,20 @@ export function StartButton() {
             </Modal>
 
             <Modal isOpen={modalType === "operation"} onClose={() => setModalType("login")} >
-                <OperationInstructions />
+                <OperationInstructions 
+                    onComplete={() => setModalType("standby")}
+                />
             </Modal>
 
             <Modal isOpen={modalType === "Qr"} onClose={() => setModalType("login")} >
                 <Qr />
             </Modal>
+
+            <Modal isOpen={modalType === "standby"} onClose={() => setModalType("login")} >
+                <Stanby />
+            </Modal>
+
+            
 
         </>
     );
