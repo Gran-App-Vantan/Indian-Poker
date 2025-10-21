@@ -21,7 +21,7 @@ export function OperationInstructions({
             imagewidth:884,
             imageheight:284,
             bottomText1:"相手より高い数字のカードを予想して勝利を目指します",
-            bottonText2:"みんなで話し合い騙し会いましょう",
+            bottomText2:"みんなで話し合い騙しあいましょう",
         },
 
         {
@@ -30,7 +30,7 @@ export function OperationInstructions({
             imagewidth:430,
             imageheight:284,
             bottomText1:"親のPCで掛金を決めれます",
-            bottonText2:"ここもみんなで話し合い掛金を決めましょう",
+            bottomText2:"ここもみんなで話し合い掛金を決めましょう",
         },
 
         {
@@ -39,7 +39,7 @@ export function OperationInstructions({
             imagewidth:884,
             imageheight:284,
             bottomText1:"話し合いの時間は5分 延長ボタンで延長もできます",
-            bottonText2:"自分のカードが弱いと思ったら変更しよう",
+            bottomText2:"自分のカードが弱いと思ったら変更しよう",
         },
 
         {
@@ -48,7 +48,7 @@ export function OperationInstructions({
             imagewidth:430,
             imageheight:284,
             bottomText1:"左から右に向けて強くなります",
-            bottonText2:"強いカードを引き当てて相手を怖がらせましょう",
+            bottomText2:"強いカードを引き当てて相手を怖がらせましょう",
         },
 
         {
@@ -57,7 +57,7 @@ export function OperationInstructions({
             imagewidth:430,
             imageheight:284,
             bottomText1:" 相手より高い数字のカードを引いて",
-            bottonText2:"優勝を目指して頑張ろう!!",
+            bottomText2:"優勝を目指して頑張ろう!!",
         },
     ]
 
@@ -101,7 +101,7 @@ export function OperationInstructions({
 
                     <div className='text-2xl font-bold text-center bg-white/40'>
                         <p>{Steps[currentStep].bottomText1}</p>
-                        <p>{Steps[currentStep].bottonText2}</p>
+                        <p>{Steps[currentStep].bottomText2}</p>
                     </div>
 
                     <button className='flex justify-center items-center w-[168px] h-[115px] 
