@@ -3,6 +3,8 @@
 @theme  {
   --color-black: #262626;
   --color-gray: #8B887A;
+  --color-brown: #7A5C2E;
+  --color-brown2: #9F8E6E;
   
 
     
@@ -36,7 +38,7 @@
   }
 
   .gradation-gold {
-  position: relative;
+    position: relative;
     border-radius: 40px;
     overflow: hidden;
   }
