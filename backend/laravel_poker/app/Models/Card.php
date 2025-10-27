@@ -12,6 +12,7 @@ class Card extends Model
     protected $fillable = [
         'number',
         'type',
-        'status',
+        'has_user_id',
+        'is_in_deck',
     ];
 }
