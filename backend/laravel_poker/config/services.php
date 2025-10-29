@@ -35,4 +35,8 @@ return [
         ],
     ],
 
+    'dealer' => [
+        'token' => env('DEALER_ACCOUNT_TOKEN'),
+    ],
+
 ];

@@ -112,9 +112,16 @@ class GameController extends Controller
         if ($authUser->id === 1) {
             Cache::put('is_started', true);
             $this->distributeCards();
+            return response()->json([
+                'success' => true,
+                'message' => 'ゲームの開始に成功しました'
+            ]);
         }
 
-        return response()->noContent();
+        return response()->json([
+            'success' => false,
+            'message' => 'ゲームの開始に失敗しました'
+        ]);
     }
 
     protected function distributeCards()
@@ -148,17 +155,11 @@ class GameController extends Controller
         return response()->json(['message' => '準備完了しました']);
     }
 
-    public function isStarted()
-    {
-        $isStarted = Cache::get('is_started', false);
-        return response()->json($isStarted);
-    }
-
     public function isAllSet()
     {
         // is_playingがtrueのユーザーの全てのis_setカラムがtrueかどうかを返す
         $playingUsers = User::where('is_playing', true)->get();
-
+        
         if ($playingUsers->isEmpty()) {
             return response()->json([
                 'message' => '現在プレイ中のユーザーがいません',
@@ -166,7 +167,7 @@ class GameController extends Controller
             ], 400);
         }
 
-        $allSet = $playingUsers->every(fn($user) => $user->is_set === true);
+        $allSet = $playingUsers->every(fn($user) => $user->is_set === 1);
 
         return response()->json([
             'all_set' => $allSet
@@ -184,7 +185,7 @@ class GameController extends Controller
                         ->with('card:id,number,type,has_user_id')
                         ->get();
 
-        $allNotPlaying = User::all()->every(fn($user) => $user->is_playing === false);
+        $allNotPlaying = User::all()->every(fn($user) => $user->is_playing === 0);
         if ($allNotPlaying) {
             // 計算して結果を返す。
             // $snsUsers = User::whereNotNull('sns_id')
@@ -193,6 +194,7 @@ class GameController extends Controller
             $winners = $gameResult['winners'];
 
             $snsResults = $allPlayers->map(function ($player) use ($winners, $totalLatch) {
+            
                 if ($winners->contains($player)) {
                     $index = $winners->search($player);
                     $share = intdiv($totalLatch, $winners->count());
@@ -201,30 +203,61 @@ class GameController extends Controller
                 } else {
                     $pointChange = -$player->latch;
                 }
+                return [
+                    'id' => $player->id,
+                    'sns_id' => $player->sns_id,
+                    'point' => $pointChange,
+                    'service_name' => 'インディアンポーカー',
+                    'description' => 'ゲーム終了時のポイント配分',
+                    'type' => 'get',
+                ];
+            });
+            // dd($snsResults);
+            foreach ($snsResults as $result) {
+            //10.79.13.164の部分は自分のPCのIPアドレスを入力してください
+            //IPはipconfig getifaddr en0をターミナルに入力し、実行してください
+                $url = "http://10.79.13.164:8777/api/account/wallet/update/{$result['sns_id']}?" . http_build_query([
+                    'point' => $result['point'],
+                    'service_name' => $result['service_name'],
+                    'description' => $result['description'],
+                    'type' => $result['type']
+                ]);
+                Http::withHeaders([
+                    'Authorization' => 'Bearer ' . config('services.dealer.token')
+                ])->patch($url);
+            }
 
-            return [
-                'id' => $player->id,
-                'point' => $pointChange,
-                'service_name' => 'インディアンポーカー',
-                'description' => 'ゲーム終了時のポイント配分',
-                'type' => 'use',
-            ];
-        });
-
-        foreach ($snsResults as $result) {
-            Http::async()->put('http://127.0.0.1:8777/api/account/wallet/update', $result);
+            $authUser->update([
+                'sns_id' => null,
+                'is_playing' => false,
+            ]);
+            Card::query()->update([
+                'has_user_id' => null,
+                'is_in_deck' => true,
+            ]);
         }
-
-        $authUser->update([
-            'sns_id' => null,
-        ]);
-        Card::query()->update([
-            'has_user_id' => null,
-            'is_in_deck' => true,
-        ]);
+        return response()->noContent();
     }
 
-        return response()->noContent();
+    public function currentOptions(Request $request){
+        $authUser = $request->user();
+        if (!$authUser->is_playing) {
+            return response()->json(['message' => 'ゲームに参加していません'], 400);
+        }
+
+        $cardOffer = Card::where('is_in_deck', true)
+        ->where('is_current_option', false)
+        ->inRandomOrder()
+        ->limit(4)
+        ->get(['id','number','type']);
+        $cardOffer->each(function ($card) {
+            $card->is_current_option = true;
+            $card->save();
+            unset($card->is_current_option);
+        });
+        return response()->json([
+            'cardOffer' => $cardOffer,
+        ]);
     }
 
     public function changeCard(Request $request)
@@ -237,15 +270,18 @@ class GameController extends Controller
 
         $newCardId = $request->input('card_id');
         $card = Card::find($newCardId);
-
+        $cardOffers = $request->input('card_offers');
+        
         if (!$card || !$card->is_in_deck) {
             return response()->json(['message' => 'そのカードは選べません'], 400);
+        }
+        if (!$cardOffers) {
+            return response()->json(['message' => '提供したカードの情報がありません'], 400);
         }
 
         if ($authUser->card) {
             $authUser->card->update([
                 'has_user_id' => null,
-                'is_in_deck' => true,
             ]);
         }
 
@@ -253,6 +289,12 @@ class GameController extends Controller
             'has_user_id' => $authUser->id,
             'is_in_deck' => false,
         ]);
+
+        $cardOffers = Card::whereIn('id', $cardOffers)->get();
+        $cardOffers->each(function ($cardOffer) {
+            $cardOffer->is_current_option = false;
+            $cardOffer->save();
+        });
 
         return response()->json([
             'message' => 'カードを変更しました',
@@ -273,7 +315,6 @@ class GameController extends Controller
         }
 
         $newLatch = $request->input('latch');
-
         if (!is_int($newLatch) || $newLatch <= 0) {
             return response()->json(['message' => '掛け金は正の整数で指定してください'], 400);
         }

@@ -12,10 +12,12 @@ use Illuminate\Support\Facades\Http;
 class AuthController extends Controller
 {
     // useEffectで取得し続ける用
-    public function me()
+    public function me(Request $request)
     {
-        $authUser = request()->user();
-        $snsUser = Http::get("http://localhost:8777/api/account/me/{$authUser->sns_id}")['data']['user'];
+        $authUser = $request->user();
+            //10.79.13.164の部分は自分のPCのIPアドレスを入力してください
+            //IPはipconfig getifaddr en0をターミナルに入力し、実行してください
+        $snsUser = Http::get("http://10.79.13.164:8777/api/account/show/{$authUser->sns_id}")['data']['user'];
 
         return response()->json([
             'user_id' => $authUser->id,
@@ -69,16 +71,25 @@ class AuthController extends Controller
     // Game Front
     // └> Game Back `POST /api/auth/exit`
     //    └> SNS Back `PUT /api/account/wallet/update {game_type, sns_id, point}`
+
+    //memo authのexitはreset的な感じ
     public function exit()
     {
         $authUser = request()->user();
         if ($authUser->sns_id) {
             // TODO: SNS Back に合わせて変更
-            Http::async()->post('http://localhost:8777/api/account/wallet/update', [
-                'game_type' => 1,
-                'sns_id' => $authUser->sns_id,
-                'point' => $authUser->point
+            //10.79.13.164の部分は自分のPCのIPアドレスを入力してください
+            //IPはipconfig getifaddr en0をターミナルに入力し、実行してください
+            
+            $url = "http://10.79.13.164:8777/api/account/wallet/update/{$authUser->sns_id}?" . http_build_query([
+                'point' => $authUser->point,
+                'service_name' => 'インディアンポーカー',
+                'description' => 'ゲーム終了時のポイント更新',
+                'type' => 'get'
             ]);
+            Http::withHeaders([
+                'Authorization' => 'Bearer ' . config('services.dealer.token')
+            ])->patch($url);
         }
 
         $authUser->update([

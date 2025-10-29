@@ -12,10 +12,13 @@ Route::get('/user', function (Request $request) {
 Route::prefix('auth')->group(function () {
     Route::post('/login/{id}', [AuthController::class, 'login']);
     Route::post('/enter', [AuthController::class, 'enter']);
+
 });
 
-Route::middleware('auth:sanctum')->group(function () {
-    Route::post('/auth/exit', [AuthController::class, 'exit']);
+Route::middleware('auth:sanctum')->prefix('auth')->group(function () {
+    Route::post('/exit', [AuthController::class, 'exit']);
+    Route::get('/me', [AuthController::class, 'me']);
+
 });
 
 Route::middleware('auth:sanctum')->prefix('game')->group(function () {
@@ -23,6 +26,8 @@ Route::middleware('auth:sanctum')->prefix('game')->group(function () {
     Route::post('/set', [GameController::class, 'set']);
     Route::get('/result', [GameController::class, 'result']);
     Route::post('/exit', [GameController::class, 'exit']);
+    Route::get('/current-options',[GameController::class, 'currentOptions']);
     Route::post('/change-card', [GameController::class, 'changeCard']);
     Route::post('/change-latch', [GameController::class, 'changeLatch']);
+    Route::get('/is-all-set', [GameController::class, 'isAllSet']);
 });

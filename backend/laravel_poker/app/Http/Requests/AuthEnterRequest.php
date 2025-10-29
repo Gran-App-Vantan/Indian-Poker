@@ -3,6 +3,8 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Contracts\Validation\Validator;
+use Illuminate\Http\Exceptions\HttpResponseException;
 
 class AuthEnterRequest extends FormRequest
 {
@@ -37,5 +39,17 @@ class AuthEnterRequest extends FormRequest
             'sns_id.integer'   => 'SNS IDは整数で指定してください。',
             'point.integer'    => 'ポイントは整数で指定してください。',
         ];
+    }
+
+    public function failedValidation(Validator $validator)
+    {
+        throw new HttpResponseException(
+            response()->json([
+                'success' => false,
+                'messages' => collect($validator->errors()->messages())
+                    ->flatten()
+                    ->toArray()
+            ], 422)
+        );
     }
 }

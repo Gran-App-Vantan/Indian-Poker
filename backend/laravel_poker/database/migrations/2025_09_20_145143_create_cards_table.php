@@ -18,6 +18,7 @@ return new class extends Migration
             $table->enum('type', ['heart', 'diamond', 'spade', 'club', 'joker_red', 'joker_black']);
             $table->unsignedBigInteger('has_user_id')->nullable();
             $table->boolean('is_in_deck')->default(true);
+            $table->boolean('is_current_option')->default(false);
         });
 
         DB::table('cards')->insert([
