@@ -1,5 +1,19 @@
 @import "tailwindcss";
 
+
+
+@font-face {
+  font-family: 'DSEG14 Classic';
+  src: url('/assets/fonts/DSEG7ModernMini-Bold.woff') format('woff2'),
+      url('/assets/fonts/DSEG7ModernMini-Bold.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+
+:root {
+  --default-font-family: "DSEG14 Classic", sans-serif;
+}
+
 @theme  {
   --color-black: #262626;
   --color-gray: #8B887A;
@@ -8,10 +22,6 @@
   
 
     
-}
-
-@layer base {
-
 }
 
 
