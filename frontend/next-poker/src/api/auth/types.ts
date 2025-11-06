@@ -7,3 +7,9 @@ export interface User {
   userIcon: string;
   isParent: boolean;
 }
+
+export interface UserContextType {
+  user: User | null;
+  setUser: (user: User | null) => void;
+  fetchCurrentUser: () => Promise<void>;
+}
