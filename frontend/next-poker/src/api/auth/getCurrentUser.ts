@@ -1,18 +1,9 @@
 import axios from "axios";
 import Cookies from "js-cookie";
 import humps from "humps";
+import { User } from "./types";
 
-export interface getCurrentUserResponse {
-  id: number;
-  userId: number;
-  snsId: number;
-  point: number;
-  name: string;
-  userIcon: string;
-  isParent: boolean;
-}
-
-export async function GetCurrentUser(): Promise<getCurrentUserResponse> {
+export async function GetCurrentUser(): Promise<User> {
   const apiUrl = `${process.env.NEXT_PUBLIC_API_URL}/auth/me`;
   const authToken = Cookies.get("authToken");
 
@@ -24,7 +15,7 @@ export async function GetCurrentUser(): Promise<getCurrentUserResponse> {
     })
     .then((res) => {
       res.data = humps.camelizeKeys(res.data);
-      return res.data as getCurrentUserResponse;
+      return res.data as User;
     })
     .catch((err) => {
       throw err;
