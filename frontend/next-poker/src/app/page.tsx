@@ -2,10 +2,33 @@
 
 import Image from "next/image";
 import styles from "../app/StartPage.module.css"
-import {Logo} from "@/components/features/start/Logo";
+import { useEffect, useState } from "react";
+import { Logo } from "@/components/features/start/Logo";
 import { StartButton } from "@/components/features/start/StartButon";
+import { CreateTokenUrl } from "@/api/auth/createTokenUrl";
 
 export default function Home() {
+  const [data, setData] = useState({});
+
+  const deviceNumber = 1; // TODO: localStorageでパソコンごとに数字を設定
+
+  useEffect(() => {
+    const createToken = async () => {
+      const response = await CreateTokenUrl({
+        deviceNumber: deviceNumber,
+        gameType: "IndianPoker",
+      });
+
+      if (response.success) {
+        setData(response.data);
+      }
+    }
+    
+    createToken();
+  }, [])
+
+  console.log(data);
+
   return (
     <div className={`relative min-h-screen bg-cover bg-center  ${styles.bgScrollX}`}
       style={{ backgroundImage: "url('/bg-img/bgimg.svg')" }}>

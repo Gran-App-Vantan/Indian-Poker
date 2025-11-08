@@ -20,7 +20,7 @@ export type CreateTokenUrlResponse =
   }
 
 export async function CreateTokenUrl(req: CreateTokenUrlRequest): Promise<CreateTokenUrlResponse> {
-  const apiUrl = `${process.env.SNS_API_URL}/game/create-url`;
+  const apiUrl = `${process.env.NEXT_PUBLIC_SNS_API_URL}/game/create-url`;
 
   return axios
     .post(apiUrl, req)
