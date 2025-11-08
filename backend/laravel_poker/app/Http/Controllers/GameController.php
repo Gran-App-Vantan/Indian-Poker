@@ -117,7 +117,7 @@ class GameController extends Controller
         ])->post($url)['data'];
         return response()->json([
             'success' => true,
-            'message' => 'ゲームの開始に成功しました',
+            'message' => 'トークンの生成に成功しました',
             'data' => [
                 'token' => $response['token'],
                 'game_type' => $response['game_type'],
