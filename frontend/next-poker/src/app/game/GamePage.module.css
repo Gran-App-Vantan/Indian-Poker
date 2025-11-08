@@ -1,0 +1,25 @@
+/* スライダー用スタイル */
+.slider {
+    -webkit-appearance: none;
+    height: 60px;
+    border-radius: 47px;
+    border: #494949 2px solid;
+    background: linear-gradient(270deg, #F8BC44 0%, #C59D4D 23.08%, #8B1D23 100%);
+    box-shadow: 0 0 47.3px 0 #220101 inset;
+}
+
+.slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 90px;
+    height: 90px;
+    background-image: url('/game/chip_icon4.png');
+    background-size: contain; 
+    background-repeat: no-repeat;
+    background-position: center;
+    cursor: pointer;
+    z-index: 1;
+    position: relative;
+}
+
+
+
