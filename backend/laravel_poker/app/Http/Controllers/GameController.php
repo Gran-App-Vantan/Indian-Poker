@@ -105,6 +105,25 @@ class GameController extends Controller
         ];
     }
 
+    public function createUrl(Request $request)
+    {
+        $authUser = request()->user();
+        $url = config('services.dealer.api_url') . "/api/game/create-url?" . http_build_query([
+            'device_number' => $authUser->id,
+            'game_type' => "IndianPoker",
+        ]);
+        $response = Http::withHeaders([
+            'Authorization' => 'Bearer ' . config('services.dealer.token')
+        ])->post($url)['data'];
+        return response()->json([
+            'success' => true,
+            'message' => 'ゲームの開始に成功しました',
+            'data' => [
+                'token' => $response['token'],
+                'game_type' => $response['game_type'],
+            ]
+        ]);
+    }
     public function start()
     {
         $authUser = request()->user();
@@ -214,9 +233,7 @@ class GameController extends Controller
             });
             // dd($snsResults);
             foreach ($snsResults as $result) {
-            //10.79.13.164の部分は自分のPCのIPアドレスを入力してください
-            //IPはipconfig getifaddr en0をターミナルに入力し、実行してください
-                $url = "http://10.79.13.164:8777/api/account/wallet/update/{$result['sns_id']}?" . http_build_query([
+                $url = config('services.dealer.api_url') . "/api/account/wallet/update/{$result['sns_id']}?" . http_build_query([
                     'point' => $result['point'],
                     'service_name' => $result['service_name'],
                     'description' => $result['description'],
