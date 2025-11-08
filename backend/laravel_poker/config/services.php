@@ -36,6 +36,7 @@ return [
     ],
 
     'dealer' => [
+        'api_url' => env('SNS_API_URL', 'http://localhost:8777'),
         'token' => env('DEALER_ACCOUNT_TOKEN'),
     ],
 
