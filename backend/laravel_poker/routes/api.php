@@ -22,6 +22,7 @@ Route::middleware('auth:sanctum')->prefix('auth')->group(function () {
 });
 
 Route::middleware('auth:sanctum')->prefix('game')->group(function () {
+    Route::post('/create-url', [GameController::class, 'createUrl']);
     Route::post('/start', [GameController::class, 'start']);
     Route::post('/set', [GameController::class, 'set']);
     Route::get('/result', [GameController::class, 'result']);

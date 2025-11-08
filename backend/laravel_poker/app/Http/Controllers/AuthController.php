@@ -15,9 +15,7 @@ class AuthController extends Controller
     public function me(Request $request)
     {
         $authUser = $request->user();
-            //10.79.13.164の部分は自分のPCのIPアドレスを入力してください
-            //IPはipconfig getifaddr en0をターミナルに入力し、実行してください
-        $snsUser = Http::get("http://10.79.13.164:8777/api/account/show/{$authUser->sns_id}")['data']['user'];
+        $snsUser = Http::get(config('services.dealer.api_url') . "/api/account/show/{$authUser->sns_id}")['data']['user'];
 
         return response()->json([
             'user_id' => $authUser->id,
@@ -78,10 +76,7 @@ class AuthController extends Controller
         $authUser = request()->user();
         if ($authUser->sns_id) {
             // TODO: SNS Back に合わせて変更
-            //10.79.13.164の部分は自分のPCのIPアドレスを入力してください
-            //IPはipconfig getifaddr en0をターミナルに入力し、実行してください
-            
-            $url = "http://10.79.13.164:8777/api/account/wallet/update/{$authUser->sns_id}?" . http_build_query([
+            $url = config('services.dealer.api_url') . "/api/account/wallet/update/{$authUser->sns_id}?" . http_build_query([
                 'point' => $authUser->point,
                 'service_name' => 'インディアンポーカー',
                 'description' => 'ゲーム終了時のポイント更新',

@@ -10,6 +10,12 @@ use Illuminate\Support\Facades\Http;
 
 class GameController extends Controller
 {
+    protected function getCardImage($card)
+    {
+        return $card->number === 0
+            ? url("/assets/images/cards/joker.svg")
+            : url("/assets/images/cards/{$card->type}-{$card->number}.svg");
+    }
     public function result()
     {
         $authUser = request()->user();
@@ -59,6 +65,7 @@ class GameController extends Controller
                 'card' => $winner->card ? [
                     'number' => $winner->card->number,
                     'type' => $winner->card->type,
+                    'imagePath' => $this->getCardImage($winner->card),
                 ] : null,
                 'latch' => $winner->latch,
                 'point' => $winner->point + $share + ($index === 0 ? $remainder : 0),
@@ -75,6 +82,7 @@ class GameController extends Controller
                 'card' => $item['user']->card ? [
                     'number' => $item['user']->card->number,
                     'type' => $item['user']->card->type,
+                    'imagePath' => $this->getCardImage($item['user']->card),
                 ] : null,
                 'latch' => $item['user']->latch,
                 'point' => $item['user']->point,
@@ -87,6 +95,7 @@ class GameController extends Controller
                 'card' => $p->id === $authUser->id ? null : ($p->card ? [
                     'number' => $p->card->number,
                     'type' => $p->card->type,
+                    'imagePath' => $this->getCardImage($p->card),
                 ] : null),
                 'latch' => $p->latch,
                 'point' => $p->point,
@@ -105,6 +114,25 @@ class GameController extends Controller
         ];
     }
 
+    public function createUrl(Request $request)
+    {
+        $authUser = request()->user();
+        $url = config('services.dealer.api_url') . "/api/game/create-url?" . http_build_query([
+            'device_number' => $authUser->id,
+            'game_type' => "IndianPoker",
+        ]);
+        $response = Http::withHeaders([
+            'Authorization' => 'Bearer ' . config('services.dealer.token')
+        ])->post($url)['data'];
+        return response()->json([
+            'success' => true,
+            'message' => 'トークンの生成に成功しました',
+            'data' => [
+                'token' => $response['token'],
+                'game_type' => $response['game_type'],
+            ]
+        ]);
+    }
     public function start()
     {
         $authUser = request()->user();
@@ -214,9 +242,7 @@ class GameController extends Controller
             });
             // dd($snsResults);
             foreach ($snsResults as $result) {
-            //10.79.13.164の部分は自分のPCのIPアドレスを入力してください
-            //IPはipconfig getifaddr en0をターミナルに入力し、実行してください
-                $url = "http://10.79.13.164:8777/api/account/wallet/update/{$result['sns_id']}?" . http_build_query([
+                $url = config('services.dealer.api_url') . "/api/account/wallet/update/{$result['sns_id']}?" . http_build_query([
                     'point' => $result['point'],
                     'service_name' => $result['service_name'],
                     'description' => $result['description'],
@@ -253,6 +279,7 @@ class GameController extends Controller
         $cardOffer->each(function ($card) {
             $card->is_current_option = true;
             $card->save();
+            $card['imagePath'] = $this->getCardImage($card);
             unset($card->is_current_option);
         });
         return response()->json([
@@ -295,13 +322,14 @@ class GameController extends Controller
             $cardOffer->is_current_option = false;
             $cardOffer->save();
         });
-
+        $imagePath = $this->getCardImage($card);
         return response()->json([
             'message' => 'カードを変更しました',
             'card' => [
                 'id' => $card->id,
                 'number' => $card->number,
                 'type' => $card->type,
+                'imagePath' => $imagePath,
             ]
         ]);
     }
