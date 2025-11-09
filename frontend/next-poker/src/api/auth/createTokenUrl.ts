@@ -20,10 +20,15 @@ export type CreateTokenUrlResponse =
   }
 
 export async function CreateTokenUrl(req: CreateTokenUrlRequest): Promise<CreateTokenUrlResponse> {
-  const apiUrl = `${process.env.NEXT_PUBLIC_SNS_API_URL}/game/create-url`;
+  const apiUrl = `${process.env.NEXT_PUBLIC_GAME_API_URL}/game/create-url`;
 
   return axios
-    .post(apiUrl, req)
+    .post(apiUrl, req, {
+      headers: {
+        "Content-Type": "application/json",
+        "Accept": "application/json",
+      },
+    })
     .then((res) => {
       res.data = humps.camelizeKeys(res.data);
       return res.data as CreateTokenUrlResponse;
