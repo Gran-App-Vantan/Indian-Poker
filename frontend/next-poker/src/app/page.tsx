@@ -4,12 +4,13 @@ import Image from "next/image";
 import styles from "../app/StartPage.module.css"
 import Cookies from "js-cookie";
 import { useState, useEffect } from "react";
-import { Logo } from "@/components/features/start/Logo";
-import { StartButton } from "@/components/features/start/StartButon";
+import { Modal } from "@/components/shared/Modal";
+import { Logo, StartButton, LoginModalContent, OperationInstructions, Qr, Stanby } from "@/components/features/start";
 import { Login, CreateTokenUrl } from "@/api/auth";
 
 export default function Home() {
-  const [data, setData] = useState({});
+  const [token, setToken] = useState("");
+  const [modalType, setModalType] = useState<"login" | "operation" | "Qr" | "standby" | null>(null);
 
   const deviceNumber = 1; // TODO: localStorageでパソコンごとに数字を設定
 
@@ -39,7 +40,7 @@ export default function Home() {
         });
 
         if (response.success) {
-          setData(response.data);
+          setToken(response.data.token);
         } else {
           console.error("トークンURLの作成に失敗しました");
         }
@@ -51,7 +52,7 @@ export default function Home() {
     login();
   }, []);
 
-  console.log(data);
+  console.log(token);
 
   return (
     <div className={`relative min-h-screen bg-cover bg-center  ${styles.bgScrollX}`}
@@ -77,8 +78,30 @@ export default function Home() {
           />
       </div>
 
-      <StartButton />
-        
+      <StartButton setModalType={(type) => setModalType(type as "login" | "operation" | "Qr" | "standby" | null)}/>
+
+      <Modal isOpen={modalType === "login"} onClose={() => setModalType(null)} >
+          <LoginModalContent
+              onGuestPlay={() => setModalType("operation")}
+              onLogin={() => {
+                  setModalType("Qr");
+              }}
+          />
+      </Modal>
+
+      <Modal isOpen={modalType === "operation"} onClose={() => setModalType("login")} >
+          <OperationInstructions 
+              onComplete={() => setModalType("standby")}
+          />
+      </Modal>
+
+      <Modal isOpen={modalType === "Qr"} onClose={() => setModalType("login")} >
+          <Qr token={token}/>
+      </Modal>
+
+      <Modal isOpen={modalType === "standby"} onClose={() => setModalType("login")} >
+          <Stanby />
+      </Modal>
     </div>
   );
 }
