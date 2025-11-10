@@ -3,10 +3,10 @@
 import Image from "next/image";
 import styles from "../app/StartPage.module.css"
 import Cookies from "js-cookie";
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
 import { Logo } from "@/components/features/start/Logo";
 import { StartButton } from "@/components/features/start/StartButon";
-import { Login } from "@/api/auth";
+import { Login, CreateTokenUrl } from "@/api/auth";
 
 export default function Home() {
   const [data, setData] = useState({});
@@ -14,18 +14,44 @@ export default function Home() {
   const deviceNumber = 1; // TODO: localStorageでパソコンごとに数字を設定
 
   useEffect(() => {
-    const createToken = async () => {
-      const response = await Login(deviceNumber);
+    const login = async () => {
+      try {
+        const response = await Login(deviceNumber);
 
-      if (response.success) {
+        if (!response.success) {
+          console.error("ログインに失敗しました");
+          return;
+        }
+
         Cookies.set("authToken", response.authToken);
-      } else {
-        console.error("ログインに失敗しました");
+        
+        await createTokenUrl();
+      } catch (error) {
+        console.error("エラーが発生しました:", error);
+      }
+    };
+
+    const createTokenUrl = async () => {
+      try {
+        const response = await CreateTokenUrl({
+          deviceNumber: deviceNumber,
+          gameType: "IndianPoker"
+        });
+
+        if (response.success) {
+          setData(response.data);
+        } else {
+          console.error("トークンURLの作成に失敗しました");
+        }
+      } catch (error) {
+        console.error("エラーが発生しました:", error);
       }
     }
     
-    createToken();
-  }, [])
+    login();
+  }, []);
+
+  console.log(data);
 
   return (
     <div className={`relative min-h-screen bg-cover bg-center  ${styles.bgScrollX}`}
