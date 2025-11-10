@@ -1,6 +1,7 @@
 import { QRCodeSVG } from "qrcode.react";
 
 export function Qr({ token }: { token: string}) {
+    console.log(token);
     return(
         <dialog
             className="flex items-center justify-center m-auto

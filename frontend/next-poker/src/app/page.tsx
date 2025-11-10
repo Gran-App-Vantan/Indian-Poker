@@ -52,8 +52,6 @@ export default function Home() {
     login();
   }, []);
 
-  console.log(token);
-
   return (
     <div className={`relative min-h-screen bg-cover bg-center  ${styles.bgScrollX}`}
       style={{ backgroundImage: "url('/bg-img/bgimg.svg')" }}>

@@ -16,8 +16,10 @@ return [
     'allowed_methods' => ['*'],
 
     'allowed_origins' => [
-        'http://localhost:3010',
         'http://localhost:3000',
+        'http://localhost:3010',
+        'http://localhost:3005',
+        'http://10.79.12.146:3005',
     ],
 
     'allowed_origins_patterns' => [],
