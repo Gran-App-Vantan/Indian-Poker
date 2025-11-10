@@ -11,7 +11,16 @@
 }
 
 :root {
-  --default-font-family: "DSEG14 Classic", sans-serif;
+  --jp-font: "Noto Sans JP", sans-serif;
+  --dseg-font: "DSEG14 Classic";
+}
+
+body {
+  font-family: var(--jp-font);
+}
+
+.dseg {
+  font-family: var(--dseg-font);
 }
 
 @theme  {
@@ -19,9 +28,6 @@
   --color-gray: #8B887A;
   --color-brown: #7A5C2E;
   --color-brown2: #9F8E6E;
-  
-
-    
 }
 
 
