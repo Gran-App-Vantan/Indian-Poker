@@ -5,6 +5,7 @@ import {useState} from "react";
 import { Timer } from "@/components/features/game/Timer";
 import { Button } from "@/components/features/game/Button";
 import { ChangeCard } from "@/components/features/game/ChangeCard";
+import {UserCard} from"@/components/features/game/UserCard";
 export default function Game() {
     const [showOverlay, setShowOverlay] = useState(false);
 
@@ -20,6 +21,18 @@ export default function Game() {
         <div className="flex items-center justify-center relative w-screen h-screen  bg-[url('/bg-img/GamePageBg.png')] bg-no-repeat bg-cover bg-center">
                 <div className="absolute top-10  left-10 z-50">
                     <Timer />
+                </div>
+
+                <div className="absolute top-1/2 -translate-y-1/2 left-10">
+                    < UserCard />
+                </div>
+
+                <div className="absolute top-40 -translate-y-1/2">
+                    < UserCard />
+                </div>
+
+                <div className="absolute top-1/2 -translate-y-1/2 right-10">
+                    < UserCard />
                 </div>
 
                 <div className="flex flex-col items-center gap-4 absolute bottom-4 left-1/2 -translate-x-1/2 z-10">
