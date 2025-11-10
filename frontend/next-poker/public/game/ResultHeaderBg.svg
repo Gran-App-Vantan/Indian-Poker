@@ -1,0 +1,19 @@
+<svg width="1279" height="80" viewBox="0 0 1279 80" fill="none" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<rect width="1279" height="80" fill="url(#paint0_linear_5459_2189)"/>
+<rect width="1279" height="80" fill="url(#pattern0_5459_2189)" fill-opacity="0.2"/>
+<rect width="1279" height="56" transform="translate(0 12)" fill="white" fill-opacity="0.15"/>
+<defs>
+<linearGradient id="paint0_linear_5459_2189" x1="0" y1="40.0003" x2="1279" y2="40.0003" gradientUnits="userSpaceOnUse">
+<stop offset="0.197115" stop-color="#671818"/>
+<stop offset="0.629808" stop-color="#972121"/>
+<stop offset="1" stop-color="#C57979"/>
+</linearGradient>
+<pattern id="pattern0_5459_2189" patternUnits="userSpaceOnUse" patternTransform="matrix(38.171 0 0 19.0855 0 32.825)" preserveAspectRatio="none" viewBox="0 0 93.1 46.55" width="1" height="1">
+<use xlink:href="#pattern0_5459_2189_inner" transform="translate(0 -46.55)"/>
+<use xlink:href="#pattern0_5459_2189_inner" transform="translate(46.55 -23.275)"/>
+<g id="pattern0_5459_2189_inner">
+<circle cx="17.5" cy="17.5" r="17.5" fill="#6B1A1A"/>
+</g>
+<use xlink:href="#pattern0_5459_2189_inner" transform="translate(46.55 23.275)"/>
+</pattern></defs>
+</svg>
