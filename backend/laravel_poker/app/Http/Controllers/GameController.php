@@ -183,6 +183,12 @@ class GameController extends Controller
         return response()->json(['message' => '準備完了しました']);
     }
 
+    public function isStarted()
+    {
+        $isStarted = Cache::get('is_started', false);
+        return response()->json($isStarted);
+    }
+
     public function isAllSet()
     {
         // is_playingがtrueのユーザーの全てのis_setカラムがtrueかどうかを返す
