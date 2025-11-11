@@ -15,7 +15,20 @@ class AuthController extends Controller
     public function me(Request $request)
     {
         $authUser = $request->user();
-        $snsUser = Http::get(config('services.dealer.api_url') . "/api/account/show/{$authUser->sns_id}")['data']['user'];
+        $snsUser = null;
+
+        // SNS連携済みの場合のみSNS APIを呼び出す
+        if ($authUser->sns_id) {
+            try {
+                $response = Http::get(config('services.dealer.api_url') . "/api/account/show/{$authUser->sns_id}");
+                if ($response->successful() && isset($response['data']['user'])) {
+                    $snsUser = $response['data']['user'];
+                }
+            } catch (\Exception $e) {
+                // SNS API呼び出しエラーは無視してゲスト情報を返す
+                \Log::error('SNS API error: ' . $e->getMessage());
+            }
+        }
 
         return response()->json([
             'user_id' => $authUser->id,
@@ -51,9 +64,19 @@ class AuthController extends Controller
     //       └> Game Back `POST /api/auth/enter {sns_id, user_id, point}`
     public function enter(AuthEnterRequest $request)
     {
+        \Log::info('enter メソッド呼び出し', [
+            'user_id' => $request->user_id,
+            'sns_id' => $request->sns_id,
+            'point' => $request->point,
+        ]);
+
         $user = User::find($request->user_id);
         if (!$user) {
-            return response()->noContent(404);
+            \Log::error('ユーザーが見つかりません', ['user_id' => $request->user_id]);
+            return response()->json([
+                'success' => false,
+                'message' => 'ユーザーが見つかりません'
+            ], 404);
         }
 
         // ゲストの場合はsns_idとpointは送られてこない
@@ -63,7 +86,22 @@ class AuthController extends Controller
             $user->point = $request->point;
         }
         $user->save();
-        return response()->noContent();
+
+        \Log::info('ユーザー情報更新完了', [
+            'user_id' => $user->id,
+            'sns_id' => $user->sns_id,
+            'point' => $user->point,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'アカウント接続が完了しました',
+            'data' => [
+                'user_id' => $user->id,
+                'sns_id' => $user->sns_id,
+                'point' => $user->point
+            ]
+        ]);
     }
 
     // Game Front
@@ -96,5 +134,30 @@ class AuthController extends Controller
             'is_in_deck' => true,
         ]);
         return response()->noContent();
+    }
+    
+    // QRコード表示前に接続状態をリセット
+    public function resetConnection()
+    {
+        $authUser = request()->user();
+        
+        \Log::info('接続リセット', [
+            'user_id' => $authUser->id,
+            '変更前sns_id' => $authUser->sns_id,
+        ]);
+        
+        $authUser->update([
+            'sns_id' => null,
+            'is_playing' => false,
+        ]);
+        
+        \Log::info('接続リセット完了', [
+            'user_id' => $authUser->id,
+        ]);
+        
+        return response()->json([
+            'success' => true,
+            'message' => '接続をリセットしました'
+        ]);
     }
 }
