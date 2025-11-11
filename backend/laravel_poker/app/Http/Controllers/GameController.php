@@ -16,6 +16,40 @@ class GameController extends Controller
             ? url("/assets/images/cards/joker.svg")
             : url("/assets/images/cards/{$card->type}-{$card->number}.svg");
     }
+public function stayUser()
+{
+    $users = User::where('is_playing', true)->get(['id', 'sns_id']);
+    
+    $usersWithSns = $users->map(function ($user) {
+        $userData = [
+            'id' => $user->id,
+            'sns_id' => $user->sns_id,
+            'name' => "ゲスト{$user->id}",
+            'user_icon' => null
+        ];
+
+        if ($user->sns_id) {
+            try {
+                $response = Http::get(config('services.dealer.api_url') . "/api/account/show/{$user->sns_id}");
+                if ($response->successful() && isset($response['data']['user'])) {
+                    $snsUser = $response['data']['user'];
+                    $userData['name'] = $snsUser['name'] ?? $userData['name'];
+                    $userData['user_icon'] = $snsUser['user_icon'] ?? null;
+                }
+            } catch (\Exception $e) {
+                \Log::error('SNS API error: ' . $e->getMessage());
+            }
+        }
+
+        return $userData;
+    });
+
+    return response()->json([
+        'success' => true,
+        'message' => 'ユーザーを待機状態にしました',
+        'users' => $usersWithSns,
+    ]);
+}
     public function result()
     {
         $authUser = request()->user();
@@ -113,6 +147,7 @@ class GameController extends Controller
             'playersWithRank' => $playersWithRank,
         ];
     }
+
 
     public function createUrl(Request $request)
     {

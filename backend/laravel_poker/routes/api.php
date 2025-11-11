@@ -22,6 +22,7 @@ Route::middleware('auth:sanctum')->prefix('auth')->group(function () {
 });
 
 Route::middleware('auth:sanctum')->prefix('game')->group(function () {
+    Route::get('/stay-user', [GameController::class, 'stayUser']);
     Route::get('/is-started', [GameController::class, 'isStarted']);
     Route::post('/create-url', [GameController::class, 'createUrl']);
     Route::post('/start', [GameController::class, 'start']);
