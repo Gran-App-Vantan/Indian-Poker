@@ -4,3 +4,4 @@ export * from "./OperationInstructions";
 export * from "./Qr";
 export * from "./Standby";
 export * from "./StartButon";
+export * from "./StandbyItem";

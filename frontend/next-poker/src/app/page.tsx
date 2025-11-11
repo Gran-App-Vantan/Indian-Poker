@@ -5,7 +5,7 @@ import styles from "../app/StartPage.module.css"
 import Cookies from "js-cookie";
 import { useState, useEffect } from "react";
 import { Modal } from "@/components/shared/Modal";
-import { Logo, StartButton, LoginModalContent, OperationInstructions, Qr, Stanby } from "@/components/features/start";
+import { Logo, StartButton, LoginModalContent, OperationInstructions, Qr, Standby } from "@/components/features/start";
 import { Login, CreateTokenUrl, ResetConnection } from "@/api/auth";
 import { GetSnsUser, GetSnsUserResponse } from "@/api/game";
 
@@ -234,7 +234,7 @@ export default function Home() {
       </Modal>
 
       <Modal isOpen={modalType === "standby"} onClose={() => setModalType("login")} >
-          <Stanby />
+          <Standby />
       </Modal>
     </div>
   );
