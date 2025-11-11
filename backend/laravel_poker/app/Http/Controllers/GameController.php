@@ -19,6 +19,7 @@ class GameController extends Controller
 public function isPlayingUser()
 {
     $myUser = request()->user();
+    $myUser->is_set = $myUser->is_set ? true : false;
     $users = User::where('is_playing', true)->get();
     
     $usersWithSns = $users->map(function ($user) {
@@ -27,7 +28,7 @@ public function isPlayingUser()
             'sns_id' => $user->sns_id,
             'name' => "ゲスト{$user->id}",
             'user_icon' => null,
-            'is_set' => $user->is_set,
+            'is_set' => $user->is_set ? true : false,
             'point' => $user->point,
             'latch' => $user->latch,
             'card' => $user->card ? [
