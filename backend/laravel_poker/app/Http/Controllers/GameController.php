@@ -16,7 +16,7 @@ class GameController extends Controller
             ? url("/assets/images/cards/joker.svg")
             : url("/assets/images/cards/{$card->type}-{$card->number}.svg");
     }
-public function stayUser()
+public function isPlayingUser()
 {
     $users = User::where('is_playing', true)->get(['id', 'sns_id']);
     
