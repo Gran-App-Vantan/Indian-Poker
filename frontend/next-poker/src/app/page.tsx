@@ -162,8 +162,6 @@ export default function Home() {
     };
   }, [modalType]);
 
-  console.log(snsUser);
-
   return (
     <div className={`relative min-h-screen bg-cover bg-center  ${styles.bgScrollX}`}
       style={{ backgroundImage: "url('/bg-img/bgimg.svg')" }}>
@@ -214,7 +212,7 @@ export default function Home() {
 
       <StartButton setModalType={(type) => setModalType(type as "login" | "operation" | "Qr" | "standby" | null)}/>
 
-      <Modal isOpen={modalType === "login"} onClose={() => setModalType(null)} >
+      <Modal isOpen={modalType === "login"} >
           <LoginModalContent
               onGuestPlay={() => setModalType("operation")}
               onLogin={() => {
@@ -223,18 +221,23 @@ export default function Home() {
           />
       </Modal>
 
-      <Modal isOpen={modalType === "operation"} onClose={() => setModalType("login")} >
+      <Modal isOpen={modalType === "operation"} >
           <OperationInstructions 
               onComplete={() => setModalType("standby")}
           />
       </Modal>
 
-      <Modal isOpen={modalType === "Qr"} onClose={() => setModalType("login")} >
+      <Modal isOpen={modalType === "Qr"} >
           <Qr token={token} deviceNumber={deviceNumber}/>
       </Modal>
 
-      <Modal isOpen={modalType === "standby"} onClose={() => setModalType("login")} >
-          <Standby />
+      <Modal isOpen={modalType === "standby"} >
+          <Standby 
+            iconSrc={snsUser?.userIcon}
+            deviceNumber={deviceNumber}
+            name={snsUser?.name}
+            point={snsUser?.point}
+          />
       </Modal>
     </div>
   );
