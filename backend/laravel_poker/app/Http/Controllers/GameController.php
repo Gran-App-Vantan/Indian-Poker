@@ -72,12 +72,25 @@ class GameController extends Controller
             ];
         });
 
-        $ranking = $playersWithRank
-            ->sortByDesc('rank')
-            ->values()
-            ->take(4)
-            ->map(fn($item, $index) => [
-                'rank_position' => $index + 1,
+        $sorted = $playersWithRank->sortByDesc('rank')->values();
+
+        $ranking = collect();
+        $currentRank = 1;
+        $prevRankValue = null;
+        $sameRankCount = 0;
+
+        foreach ($sorted as $index => $item) {
+            if ($prevRankValue !== null && $item['rank'] === $prevRankValue) {
+                $sameRankCount++;
+            } else {
+                $currentRank += $sameRankCount;
+                $sameRankCount = 1;
+            }
+
+            $prevRankValue = $item['rank'];
+
+            $ranking->push([
+                'rank_position' => $currentRank,
                 'id' => $item['user']->id,
                 'card' => $item['user']->card ? [
                     'number' => $item['user']->card->number,
@@ -87,6 +100,7 @@ class GameController extends Controller
                 'latch' => $item['user']->latch,
                 'point' => $item['user']->point,
             ]);
+        }
 
         $authUser = request()->user();
         $playerData = $players->map(function ($p) use ($authUser) {
