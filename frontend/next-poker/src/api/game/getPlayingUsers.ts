@@ -1,17 +1,15 @@
 import axios from "axios";
 import Cookies from "js-cookie";
 import humps from "humps";
+import { User } from "../auth";
 
-type GetPlayingUsersResponse = 
+export type PlayingUser = Pick<User, "id" | "snsId" | "name" | "userIcon" | "point">;
+
+export type GetPlayingUsersResponse = 
   | {
     success: true;
     message: string;
-    users: {
-      id: number;
-      snsId: number;
-      name: string;
-      userIcon: string;
-    }
+    users: PlayingUser[];
   }
   | {
     success: false;

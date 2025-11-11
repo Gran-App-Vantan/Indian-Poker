@@ -7,7 +7,8 @@ import { useState, useEffect } from "react";
 import { Modal } from "@/components/shared/Modal";
 import { Logo, StartButton, LoginModalContent, OperationInstructions, Qr, Standby } from "@/components/features/start";
 import { Login, CreateTokenUrl, ResetConnection } from "@/api/auth";
-import { GetSnsUser, GetSnsUserResponse } from "@/api/game";
+import { GetSnsUser, GetSnsUserResponse, GetPlayingUsers } from "@/api/game";
+import { PlayingUser } from "@/api/game";
 
 export default function Home() {
   const [token, setToken] = useState("");
@@ -15,6 +16,7 @@ export default function Home() {
   const [modalType, setModalType] = useState<"login" | "operation" | "Qr" | "standby" | null>(null);
   const [deviceNumber, setDeviceNumber] = useState<number>(1);
   const [initialSnsId, setInitialSnsId] = useState<number | null>(null);
+  const [playingUsers, setPlayingUsers] = useState<PlayingUser[]>();
 
   // ユーザー情報を取得する関数
   const getSnsUser = async () => {
@@ -47,6 +49,20 @@ export default function Home() {
       setModalType("Qr");
     }
   };
+
+  const getPlayingUsers = async () => {
+    try {
+      const response = await GetPlayingUsers();
+
+      if (response.success) {
+        setPlayingUsers(response.users);
+      } else {
+        console.error("待機中のユーザーの取得に失敗しました", response.message);
+      }
+    } catch (error) {
+      console.error("エラー: ", error);
+    }
+  }
 
   useEffect(() => {
     // localStorageからデバイス番号を取得、なければデフォルト1
@@ -147,6 +163,7 @@ export default function Home() {
           clearInterval(pollInterval);
           if (isActive) {
             setModalType("standby");
+            getPlayingUsers();
           }
         }
       } catch (error) {
@@ -161,6 +178,8 @@ export default function Home() {
       clearInterval(pollInterval);
     };
   }, [modalType]);
+
+  console.log(playingUsers);
 
   return (
     <div className={`relative min-h-screen bg-cover bg-center  ${styles.bgScrollX}`}
@@ -232,12 +251,7 @@ export default function Home() {
       </Modal>
 
       <Modal isOpen={modalType === "standby"} >
-          <Standby 
-            iconSrc={snsUser?.userIcon}
-            deviceNumber={deviceNumber}
-            name={snsUser?.name}
-            point={snsUser?.point}
-          />
+          <Standby playingUsers={playingUsers} />
       </Modal>
     </div>
   );
