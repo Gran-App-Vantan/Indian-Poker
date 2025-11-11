@@ -22,7 +22,7 @@ public function isPlayingUser()
     
     $usersWithSns = $users->map(function ($user) {
         $userData = [
-            'id' => $user->id,
+            'device_number' => $user->id,
             'sns_id' => $user->sns_id,
             'name' => "ゲスト{$user->id}",
             'user_icon' => null
