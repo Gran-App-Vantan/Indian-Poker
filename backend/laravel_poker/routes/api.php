@@ -18,7 +18,7 @@ Route::prefix('auth')->group(function () {
 Route::middleware('auth:sanctum')->prefix('auth')->group(function () {
     Route::post('/exit', [AuthController::class, 'exit']);
     Route::get('/me', [AuthController::class, 'me']);
-
+    Route::post('/reset-connection', [AuthController::class, 'resetConnection']);
 });
 
 Route::middleware('auth:sanctum')->prefix('game')->group(function () {
