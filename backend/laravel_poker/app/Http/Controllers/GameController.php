@@ -20,7 +20,15 @@ public function isPlayingUser()
 {
     $myUser = request()->user();
     $myUser->is_set = $myUser->is_set ? true : false;
-    $users = User::where('is_playing', true)->get();
+    unset($myUser->is_playing,$myUser->created_at,$myUser->updated_at);
+    $myUserCard = [
+        'id' => $myUser->card->id,
+        'number' => $myUser->card->number,
+        'type' => $myUser->card->type,
+        'imagePath' => $this->getCardImage($myUser->card)
+    ];
+    $myUser->hasCard = $myUserCard;
+    $users = User::where('is_playing', true)->with(['card'])->get();
     
     $usersWithSns = $users->map(function ($user) {
         $userData = [
@@ -38,7 +46,6 @@ public function isPlayingUser()
                 'imagePath' => $this->getCardImage($user->card),
             ] : null,
         ];
-
         if ($user->sns_id) {
             try {
                 $response = Http::get(config('services.dealer.api_url') . "/api/account/show/{$user->sns_id}");
