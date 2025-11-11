@@ -18,16 +18,34 @@ class GameController extends Controller
     }
 public function isPlayingUser()
 {
-    $users = User::where('is_playing', true)->get(['id', 'sns_id']);
+    $myUser = request()->user();
+    $myUser->is_set = $myUser->is_set ? true : false;
+    unset($myUser->is_playing,$myUser->created_at,$myUser->updated_at);
+    $myUserCard = [
+        'id' => $myUser->card->id,
+        'number' => $myUser->card->number,
+        'type' => $myUser->card->type,
+        'imagePath' => $this->getCardImage($myUser->card)
+    ];
+    $myUser->hasCard = $myUserCard;
+    $users = User::where('is_playing', true)->with(['card'])->get();
     
     $usersWithSns = $users->map(function ($user) {
         $userData = [
-            'id' => $user->id,
+            'device_number' => $user->id,
             'sns_id' => $user->sns_id,
             'name' => "ゲスト{$user->id}",
-            'user_icon' => null
+            'user_icon' => null,
+            'is_set' => $user->is_set ? true : false,
+            'point' => $user->point,
+            'latch' => $user->latch,
+            'card' => $user->card ? [
+                'id' => $user->card->id,
+                'number' => $user->card->number,
+                'type' => $user->card->type,
+                'imagePath' => $this->getCardImage($user->card),
+            ] : null,
         ];
-
         if ($user->sns_id) {
             try {
                 $response = Http::get(config('services.dealer.api_url') . "/api/account/show/{$user->sns_id}");
@@ -47,6 +65,7 @@ public function isPlayingUser()
     return response()->json([
         'success' => true,
         'message' => 'ユーザーを待機状態にしました',
+        'my_user' => $myUser,
         'users' => $usersWithSns,
     ]);
 }
@@ -106,12 +125,25 @@ public function isPlayingUser()
             ];
         });
 
-        $ranking = $playersWithRank
-            ->sortByDesc('rank')
-            ->values()
-            ->take(4)
-            ->map(fn($item, $index) => [
-                'rank_position' => $index + 1,
+        $sorted = $playersWithRank->sortByDesc('rank')->values();
+
+        $ranking = collect();
+        $currentRank = 1;
+        $prevRankValue = null;
+        $sameRankCount = 0;
+
+        foreach ($sorted as $index => $item) {
+            if ($prevRankValue !== null && $item['rank'] === $prevRankValue) {
+                $sameRankCount++;
+            } else {
+                $currentRank += $sameRankCount;
+                $sameRankCount = 1;
+            }
+
+            $prevRankValue = $item['rank'];
+
+            $ranking->push([
+                'rank_position' => $currentRank,
                 'id' => $item['user']->id,
                 'card' => $item['user']->card ? [
                     'number' => $item['user']->card->number,
@@ -121,6 +153,7 @@ public function isPlayingUser()
                 'latch' => $item['user']->latch,
                 'point' => $item['user']->point,
             ]);
+        }
 
         $authUser = request()->user();
         $playerData = $players->map(function ($p) use ($authUser) {
