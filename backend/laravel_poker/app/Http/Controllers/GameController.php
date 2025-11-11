@@ -18,14 +18,24 @@ class GameController extends Controller
     }
 public function isPlayingUser()
 {
-    $users = User::where('is_playing', true)->get(['id', 'sns_id']);
+    $myUser = request()->user();
+    $users = User::where('is_playing', true)->get();
     
     $usersWithSns = $users->map(function ($user) {
         $userData = [
             'device_number' => $user->id,
             'sns_id' => $user->sns_id,
             'name' => "ゲスト{$user->id}",
-            'user_icon' => null
+            'user_icon' => null,
+            'is_set' => $user->is_set,
+            'point' => $user->point,
+            'latch' => $user->latch,
+            'card' => $user->card ? [
+                'id' => $user->card->id,
+                'number' => $user->card->number,
+                'type' => $user->card->type,
+                'imagePath' => $this->getCardImage($user->card),
+            ] : null,
         ];
 
         if ($user->sns_id) {
@@ -47,6 +57,7 @@ public function isPlayingUser()
     return response()->json([
         'success' => true,
         'message' => 'ユーザーを待機状態にしました',
+        'my_user' => $myUser,
         'users' => $usersWithSns,
     ]);
 }
