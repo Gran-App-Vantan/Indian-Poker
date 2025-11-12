@@ -12,6 +12,9 @@ export function Standby({
     user,
 }: StandbyProps) {
     const standby = ["待機中...", "準備OK"];
+    
+    const isPlayer1 = playingUsers?.find(p => p.snsId === user?.snsId)?.deviceNumber === 1;
+    const buttonText = isPlayer1 ? "ゲーム開始" : standby[0];
 
     return (
         <dialog 
@@ -34,7 +37,7 @@ export function Standby({
                 })}
             </ul>
             <button className="flex justify-center items-center w-48 h-20  bg-white/40 rounded-2xl font-black text-white text-3xl">
-                <p>{standby[0]}</p>
+                <p>{buttonText}</p>
             </button>
         </dialog>
     );
