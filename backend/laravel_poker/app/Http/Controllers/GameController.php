@@ -21,13 +21,19 @@ public function isPlayingUser()
     $myUser = request()->user();
     $myUser->is_set = $myUser->is_set ? true : false;
     unset($myUser->is_playing,$myUser->created_at,$myUser->updated_at);
-    $myUserCard = [
-        'id' => $myUser->card->id,
-        'number' => $myUser->card->number,
-        'type' => $myUser->card->type,
-        'imagePath' => $this->getCardImage($myUser->card)
-    ];
-    $myUser->hasCard = $myUserCard;
+    
+    // カードが存在する場合のみカード情報を設定
+    if ($myUser->card) {
+        $myUserCard = [
+            'id' => $myUser->card->id,
+            'number' => $myUser->card->number,
+            'type' => $myUser->card->type,
+            'imagePath' => $this->getCardImage($myUser->card)
+        ];
+        $myUser->hasCard = $myUserCard;
+    } else {
+        $myUser->hasCard = null;
+    }
     $users = User::where('is_playing', true)->with(['card'])->get();
     
     $usersWithSns = $users->map(function ($user) {

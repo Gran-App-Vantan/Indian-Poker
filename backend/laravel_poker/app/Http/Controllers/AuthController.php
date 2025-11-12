@@ -79,6 +79,21 @@ class AuthController extends Controller
             ], 404);
         }
 
+        // SNSユーザーの場合、同じsns_idで既に参加中のユーザーがいないかチェック
+        if ($request->sns_id) {
+            $existingUser = User::where('sns_id', $request->sns_id)
+                ->where('is_playing', true)
+                ->where('id', '!=', $request->user_id) // 自分自身は除外
+                ->first();
+            
+            if ($existingUser) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'このアカウントは既に別のデバイスで参加しています'
+                ], 409); // 409 Conflict
+            }
+        }
+
         // ゲストの場合はsns_idとpointは送られてこない
         $user->sns_id = $request->sns_id ?? null;
         $user->is_playing = true;
