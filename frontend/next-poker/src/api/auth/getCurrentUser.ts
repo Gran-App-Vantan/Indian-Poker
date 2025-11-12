@@ -4,7 +4,7 @@ import humps from "humps";
 import { User } from "./types";
 
 export async function GetCurrentUser(): Promise<User> {
-  const apiUrl = `${process.env.GAME_API_URL}/auth/me`;
+  const apiUrl = `${process.env.NEXT_PUBLIC_GAME_API_URL}/auth/me`;
   const authToken = Cookies.get("authToken");
 
   return axios

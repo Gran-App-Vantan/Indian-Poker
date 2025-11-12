@@ -5,16 +5,22 @@ type StandbyitemProps = {
   deviceNumber: number;
   name: string;
   point: number;
+  isCurrentUser?: boolean;
 }
 
 export function StandbyItem({
   iconSrc,
   deviceNumber,
   name,
-  point
+  point,
+  isCurrentUser = false,
 }: StandbyitemProps) {
   return (
-    <div className="flex items-center justify-between bg-gray-300 px-11 py-5 rounded-2xl w-160">
+    <div className={`flex items-center justify-between px-11 py-5 rounded-2xl w-160 ${
+      isCurrentUser 
+        ? "bg-yellow-300 border-4 border-yellow-500 shadow-lg" 
+        : "bg-gray-300"
+    }`}>
       <div className="flex items-center gap-4 text-xl font-bold">
         <Image 
           src={iconSrc || "/icons/default-user-icon.svg"} // TODO: デフォルトアイコンを挿入

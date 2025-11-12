@@ -1,7 +1,16 @@
 import { StandbyItem } from "./StandbyItem";
 import { PlayingUser } from "@/api/game";
+import { User } from "@/api/auth";
 
-export function Standby({ playingUsers }: { playingUsers: PlayingUser[] | undefined }) {
+interface StandbyProps {
+    playingUsers: PlayingUser[] | undefined;
+    user: User | undefined;
+}
+
+export function Standby({ 
+    playingUsers,
+    user,
+}: StandbyProps) {
     const standby = ["待機中...", "準備OK"];
 
     return (
@@ -9,16 +18,20 @@ export function Standby({ playingUsers }: { playingUsers: PlayingUser[] | undefi
             className="flex flex-col gap-14 items-center justify-center m-auto gradation-red  rounded-custom overflow-hidden  bg-black/80 w-[1094px] h-[639px]"
         >
             <ul className="flex flex-col gap-3">
-                {playingUsers?.map((playinguser, index) => (
-                    <li key={index}>
-                        <StandbyItem 
-                            iconSrc={playinguser.userIcon}
-                            deviceNumber={playinguser.deviceNumber} // deviceNumberはユーザーのidを使用
-                            name={playinguser.name}
-                            point={playinguser.point}
-                        />
-                    </li>
-                ))}
+                {playingUsers?.map((playinguser, index) => {
+                    const isMe = user?.snsId === playinguser.snsId;
+                    return (
+                        <li key={index}>
+                            <StandbyItem 
+                                iconSrc={playinguser.userIcon}
+                                deviceNumber={playinguser.deviceNumber}
+                                name={playinguser.name}
+                                point={playinguser.point}
+                                isCurrentUser={isMe}
+                            />
+                        </li>
+                    );
+                })}
             </ul>
             <button className="flex justify-center items-center w-48 h-20  bg-white/40 rounded-2xl font-black text-white text-3xl">
                 <p>{standby[0]}</p>

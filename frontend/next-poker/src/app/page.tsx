@@ -9,8 +9,11 @@ import { Logo, StartButton, LoginModalContent, OperationInstructions, Qr, Standb
 import { Login, CreateTokenUrl, ResetConnection, EnterGame } from "@/api/auth";
 import { GetSnsUser, GetSnsUserResponse, GetPlayingUsers } from "@/api/game";
 import { PlayingUser } from "@/api/game";
+import { useUserContext } from "@/contexts/UserContext";
 
 export default function Home() {
+  const context = useUserContext();
+  const { user } = context || {};
   const [token, setToken] = useState("");
   const [snsUser, setSnsUser] = useState<GetSnsUserResponse | null>();
   const [modalType, setModalType] = useState<"login" | "operation" | "Qr" | "standby" | "error" | null>(null);
@@ -270,7 +273,10 @@ export default function Home() {
       </Modal>
 
       <Modal isOpen={modalType === "standby"} >
-          <Standby playingUsers={playingUsers} />
+          <Standby 
+            user={user ?? undefined}
+            playingUsers={playingUsers} 
+          />
       </Modal>
     </div>
   );
