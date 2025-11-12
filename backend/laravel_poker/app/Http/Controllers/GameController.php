@@ -34,7 +34,9 @@ public function isPlayingUser()
     } else {
         $myUser->hasCard = null;
     }
-    $users = User::where('is_playing', true)->with(['card'])->get();
+    $users = User::where('is_playing', true)
+                 ->with(['card'])
+                 ->get();
     
     $usersWithSns = $users->map(function ($user) {
         $userData = [

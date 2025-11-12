@@ -87,10 +87,17 @@ class AuthController extends Controller
                 ->first();
             
             if ($existingUser) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'このアカウントは既に別のデバイスで参加しています'
-                ], 409); // 409 Conflict
+                // 既存の接続を切断して、新しい接続を許可する
+                \Log::info('既存の接続を切断します', [
+                    '既存user_id' => $existingUser->id,
+                    '既存sns_id' => $existingUser->sns_id,
+                    '新規user_id' => $request->user_id,
+                ]);
+                
+                $existingUser->update([
+                    'sns_id' => null,
+                    'is_playing' => false,
+                ]);
             }
         }
 
@@ -161,6 +168,26 @@ class AuthController extends Controller
             '変更前sns_id' => $authUser->sns_id,
         ]);
         
+        // 同じsns_idで連携している他のデバイスもリセット
+        if ($authUser->sns_id) {
+            $otherUsers = User::where('sns_id', $authUser->sns_id)
+                ->where('id', '!=', $authUser->id)
+                ->get();
+            
+            foreach ($otherUsers as $otherUser) {
+                \Log::info('他のデバイスの接続をリセット', [
+                    'user_id' => $otherUser->id,
+                    'sns_id' => $otherUser->sns_id,
+                ]);
+                
+                $otherUser->update([
+                    'sns_id' => null,
+                    'is_playing' => false,
+                ]);
+            }
+        }
+        
+        // 自分自身の接続をリセット
         $authUser->update([
             'sns_id' => null,
             'is_playing' => false,
