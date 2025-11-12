@@ -6,7 +6,7 @@ import Cookies from "js-cookie";
 import { useState, useEffect } from "react";
 import { Modal } from "@/components/shared/Modal";
 import { Logo, StartButton, LoginModalContent, OperationInstructions, Qr, Standby } from "@/components/features/start";
-import { Login, CreateTokenUrl, ResetConnection, EnterGame } from "@/api/auth";
+import { Login, CreateTokenUrl, ResetConnection } from "@/api/auth";
 import { GetSnsUser, GetSnsUserResponse, GetPlayingUsers } from "@/api/game";
 import { PlayingUser } from "@/api/game";
 import { useUserContext } from "@/contexts/UserContext";
@@ -172,7 +172,7 @@ export default function Home() {
       } catch (error) {
         console.error("ポーリング中のエラー:", error);
       }
-    }, 2000); // 2秒ごとにチェック
+    }, 2000);
 
     // クリーンアップ: モーダルが閉じられたらポーリングを停止
     return () => {
@@ -186,10 +186,8 @@ export default function Home() {
   useEffect(() => {
     if (modalType !== "standby") return;
 
-    // 初回取得
     getPlayingUsers();
 
-    // 2秒ごとに参加中のユーザー情報を更新
     const pollInterval = setInterval(() => {
       getPlayingUsers();
     }, 2000);
@@ -198,8 +196,6 @@ export default function Home() {
       clearInterval(pollInterval);
     };
   }, [modalType]);
-
-  console.log(playingUsers);
 
   return (
     <div className={`relative min-h-screen bg-cover bg-center  ${styles.bgScrollX}`}

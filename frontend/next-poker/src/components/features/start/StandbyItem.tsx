@@ -23,7 +23,7 @@ export function StandbyItem({
     }`}>
       <div className="flex items-center gap-4 text-xl font-bold">
         <Image 
-          src={iconSrc || "/icons/default-user-icon.svg"} // TODO: デフォルトアイコンを挿入
+          src={iconSrc || "/icons/default-user-icon.svg"}
           alt={`${name}-icon`}
           width={44}
           height={44}
