@@ -14,6 +14,8 @@ export function Standby({
     const standby = ["待機中...", "準備OK"];
     
     const isPlayer1 = playingUsers?.find(p => p.snsId === user?.snsId)?.deviceNumber === 1;
+    const playerCount = playingUsers?.length ?? 0;
+    const canStartGame = playerCount >= 2;
     const buttonText = isPlayer1 ? "ゲーム開始" : standby[0];
 
     return (
@@ -36,9 +38,21 @@ export function Standby({
                     );
                 })}
             </ul>
-            <button className="flex justify-center items-center w-48 h-20  bg-white/40 rounded-2xl font-black text-white text-3xl">
-                <p>{buttonText}</p>
-            </button>
+            <div className={`${isPlayer1 && "rounded-2xl bg-gradient-to-r from-[#E9CA00] via-[#FFED7A] to-[#E9CA00] p-1 cursor-pointer"}`}>
+                <button
+                    disabled={isPlayer1 && !canStartGame}
+                    className={`flex justify-center items-center w-48 h-20 rounded-2xl font-black text-3xl ${
+                        !isPlayer1
+                            ? 'bg-gray-400/40 text-gray-300 cursor-not-allowed'
+                            : 'bg-[linear-gradient(90deg,_#CF5056_0%,_#770E13_50%,_#CF5056_100%)] text-white cursor-pointer'
+                    }`}
+                >
+                    {buttonText}
+                </button>
+            </div>
+            {isPlayer1 && !canStartGame && (
+                <p className="text-white text-sm -mt-10">※2人以上のプレイヤーが必要です</p>
+            )}
         </dialog>
     );
 }
