@@ -6,14 +6,14 @@ import Cookies from "js-cookie";
 import { useState, useEffect } from "react";
 import { Modal } from "@/components/shared/Modal";
 import { Logo, StartButton, LoginModalContent, OperationInstructions, Qr, Standby } from "@/components/features/start";
-import { Login, CreateTokenUrl, ResetConnection } from "@/api/auth";
+import { Login, CreateTokenUrl, ResetConnection, EnterGame } from "@/api/auth";
 import { GetSnsUser, GetSnsUserResponse, GetPlayingUsers } from "@/api/game";
 import { PlayingUser } from "@/api/game";
 
 export default function Home() {
   const [token, setToken] = useState("");
   const [snsUser, setSnsUser] = useState<GetSnsUserResponse | null>();
-  const [modalType, setModalType] = useState<"login" | "operation" | "Qr" | "standby" | null>(null);
+  const [modalType, setModalType] = useState<"login" | "operation" | "Qr" | "standby" | "error" | null>(null);
   const [deviceNumber, setDeviceNumber] = useState<number>(1);
   const [initialSnsId, setInitialSnsId] = useState<number | null>(null);
   const [playingUsers, setPlayingUsers] = useState<PlayingUser[]>();
@@ -179,6 +179,23 @@ export default function Home() {
     };
   }, [modalType]);
 
+  // 待機画面でのポーリング処理
+  useEffect(() => {
+    if (modalType !== "standby") return;
+
+    // 初回取得
+    getPlayingUsers();
+
+    // 2秒ごとに参加中のユーザー情報を更新
+    const pollInterval = setInterval(() => {
+      getPlayingUsers();
+    }, 2000);
+
+    return () => {
+      clearInterval(pollInterval);
+    };
+  }, [modalType]);
+
   console.log(playingUsers);
 
   return (
@@ -229,11 +246,11 @@ export default function Home() {
           />
       </div>
 
-      <StartButton setModalType={(type) => setModalType(type as "login" | "operation" | "Qr" | "standby" | null)}/>
+      <StartButton setModalType={(type) => setModalType(type as "login" | "operation" | "Qr" | "standby" | "error" | null)}/>
 
       <Modal isOpen={modalType === "login"} >
           <LoginModalContent
-              onGuestPlay={() => setModalType("operation")}
+              onGuestPlay={() => {}} // TODO: ゲストプレイ用の処理を追加
               onLogin={() => {
                   handleOpenQrModal();
               }}
@@ -242,7 +259,9 @@ export default function Home() {
 
       <Modal isOpen={modalType === "operation"} >
           <OperationInstructions 
-              onComplete={() => setModalType("standby")}
+              onComplete={async () => {
+                setModalType("standby");
+              }}
           />
       </Modal>
 

@@ -3,7 +3,7 @@ import Cookies from "js-cookie";
 import humps from "humps";
 import { User } from "../auth";
 
-export type PlayingUser = Pick<User, "id" | "snsId" | "name" | "userIcon" | "point">;
+export type PlayingUser = Pick<User, "id" | "deviceNumber" | "snsId" | "name" | "userIcon" | "point">;
 
 export type GetPlayingUsersResponse = 
   | {
