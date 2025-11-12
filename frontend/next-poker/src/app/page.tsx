@@ -6,14 +6,14 @@ import Cookies from "js-cookie";
 import { useState, useEffect } from "react";
 import { Modal } from "@/components/shared/Modal";
 import { Logo, StartButton, LoginModalContent, OperationInstructions, Qr, Standby } from "@/components/features/start";
-import { Login, CreateTokenUrl, ResetConnection } from "@/api/auth";
-import { GetSnsUser, GetSnsUserResponse, GetPlayingUsers } from "@/api/game";
+import { Login, CreateTokenUrl, EnterGame } from "@/api/auth";
+import { GetSnsUser, GetSnsUserResponse, GetPlayingUsers, ResetConnection } from "@/api/game";
 import { PlayingUser } from "@/api/game";
 import { useUserContext } from "@/contexts/UserContext";
 
 export default function Home() {
   const context = useUserContext();
-  const { user } = context || {};
+  const { user, fetchCurrentUser } = context || {};
   const [token, setToken] = useState("");
   const [snsUser, setSnsUser] = useState<GetSnsUserResponse | null>();
   const [modalType, setModalType] = useState<"login" | "operation" | "Qr" | "standby" | "error" | null>(null);
@@ -33,6 +33,11 @@ export default function Home() {
       } else {
         console.log("ゲストユーザーとしてログイン中:", response);
       }
+      
+      // UserContextも更新
+      if (fetchCurrentUser) {
+        await fetchCurrentUser();
+      }
     } catch (error) {
       setSnsUser(null);
       console.error("ユーザー情報の取得に失敗しました: ", error);
@@ -50,6 +55,30 @@ export default function Home() {
       console.error("接続のリセットに失敗しました:", error);
       // エラーが発生してもQRコードモーダルは開く
       setModalType("Qr");
+    }
+  };
+
+  // ゲストプレイ処理
+  const handleGuestPlay = async () => {
+    try {
+      console.log("ゲストとして参加します");
+      await ResetConnection();
+      
+      // ゲストとしてゲームに参加（sns_id, pointは渡さない）
+      const response = await EnterGame({
+        userId: deviceNumber,
+      });
+
+      if (response.success) {
+        console.log("ゲストとして参加しました");
+        await getSnsUser();
+        setModalType("standby");
+        getPlayingUsers();
+      } else {
+        console.error("ゲスト参加に失敗しました:", response.message);
+      }
+    } catch (error) {
+      console.error("ゲスト参加エラー:", error);
     }
   };
 
@@ -134,9 +163,24 @@ export default function Home() {
     });
     
     let isActive = true; // クリーンアップ用フラグ
+    let pollCount = 0; // ポーリング回数
+    const maxPollCount = 60; // 最大60回（2秒間隔 × 60 = 2分）
     
     const pollInterval = setInterval(async () => {
       if (!isActive) return;
+      
+      pollCount++;
+      
+      // タイムアウトチェック
+      if (pollCount >= maxPollCount) {
+        console.error("QRコード読み取りがタイムアウトしました");
+        clearInterval(pollInterval);
+        if (isActive) {
+          alert("QRコード読み取りがタイムアウトしました。もう一度お試しください。");
+          setModalType(null); // モーダルを閉じる
+        }
+        return;
+      }
       
       try {
         const response = await GetSnsUser();
@@ -145,7 +189,8 @@ export default function Home() {
           初期snsId: startingSnsId,
           変化: response.snsId !== startingSnsId,
           nullチェック: response.snsId !== null && response.snsId !== undefined,
-          isPlaying: response.isParent ? 'parent' : 'player'
+          isPlaying: response.isParent ? 'parent' : 'player',
+          ポーリング回数: pollCount
         });
         
         if (!isActive) return; // 非同期処理の間にクリーンアップされた場合
@@ -161,22 +206,27 @@ export default function Home() {
           console.log("✅ SNS連携が完了しました!", { 
             初期: startingSnsId, 
             現在: response.snsId,
-            遷移理由: startingSnsId === null ? '新規接続' : '再接続'
+            遷移理由: startingSnsId === null ? '新規接続' : '再接続',
+            ポーリング回数: pollCount
           });
           clearInterval(pollInterval);
           if (isActive) {
+            // SNSアプリ側から /api/auth/enter が既に呼ばれているはずなので、
+            // 最新状態を取得してから待機画面に遷移
+            await getSnsUser();
             setModalType("standby");
             getPlayingUsers();
           }
         }
       } catch (error) {
         console.error("ポーリング中のエラー:", error);
+        // エラーが発生してもポーリングは継続
       }
     }, 2000);
 
     // クリーンアップ: モーダルが閉じられたらポーリングを停止
     return () => {
-      console.log("QRコードポーリング停止");
+      console.log("QRコードポーリング停止", { ポーリング回数: pollCount });
       isActive = false;
       clearInterval(pollInterval);
     };
@@ -228,52 +278,61 @@ export default function Home() {
       <Logo />
         
       <div className={`absolute bottom-25 left-0 z-0  ${styles.swingImageLeft }`}>
-          <Image
-          src="/start/LightLeft.svg"
-          alt="light-left"
-          width={700}
-          height={700}
-          />
+        <Image
+        src="/start/LightLeft.svg"
+        alt="light-left"
+        width={700}
+        height={700}
+        />
       </div>
 
       <div className={`absolute bottom-25 right-0 z-0 overflow-hidden ${styles.swingImageRight }`}>
-          <Image
-          src="/start/LightRight.svg"
-          alt="light-right"
-          width={700}
-          height={700}
-          />
+        <Image
+        src="/start/LightRight.svg"
+        alt="light-right"
+        width={700}
+        height={700}
+        />
       </div>
 
       <StartButton setModalType={(type) => setModalType(type as "login" | "operation" | "Qr" | "standby" | "error" | null)}/>
 
       <Modal isOpen={modalType === "login"} >
-          <LoginModalContent
-              onGuestPlay={() => {}} // TODO: ゲストプレイ用の処理を追加
-              onLogin={() => {
-                  handleOpenQrModal();
-              }}
-          />
+        <LoginModalContent
+          onGuestPlay={() => handleGuestPlay()}
+          onLogin={() => handleOpenQrModal()}
+        />
       </Modal>
 
       <Modal isOpen={modalType === "operation"} >
-          <OperationInstructions 
-              onComplete={async () => {
-                setModalType("standby");
-              }}
-          />
+        <OperationInstructions onComplete={async () => setModalType("standby")} />
       </Modal>
 
       <Modal isOpen={modalType === "Qr"} >
-          <Qr token={token} deviceNumber={deviceNumber}/>
+        <Qr 
+          token={token} 
+          deviceNumber={deviceNumber}
+        />
       </Modal>
 
       <Modal isOpen={modalType === "standby"} >
-          <Standby 
-            user={user ?? undefined}
-            playingUsers={playingUsers} 
-          />
+        <Standby 
+          user={user ?? undefined}
+          playingUsers={playingUsers} 
+        />
       </Modal>
+      
+      {/* デバッグ情報 */}
+      {process.env.NODE_ENV === 'development' && (
+        <div className="fixed bottom-4 left-4 bg-black/80 text-white p-4 rounded-lg text-xs max-w-md z-50">
+          <div className="font-bold mb-2">デバッグ情報:</div>
+          <div>snsUser.snsId: {snsUser?.snsId ?? 'null'}</div>
+          <div>user.snsId: {user?.snsId ?? 'null'}</div>
+          <div>user.name: {user?.name ?? 'null'}</div>
+          <div>待機中ユーザー数: {playingUsers?.length ?? 0}</div>
+          <div>モーダル状態: {modalType ?? 'none'}</div>
+        </div>
+      )}
     </div>
   );
 }
