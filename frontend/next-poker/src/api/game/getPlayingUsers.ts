@@ -15,7 +15,7 @@ export type GetPlayingUsersResponse =
     message: string;
   }
 
-export async function GetPlayingUsers(deviceNumber: number):Promise<GetPlayingUsersResponse> {
+export async function GetPlayingUsers(deviceNumber: number | null):Promise<GetPlayingUsersResponse> {
   const apiUrl = `${process.env.NEXT_PUBLIC_GAME_API_URL}/game/is-playing-user`;
   const authToken = getAuthToken(deviceNumber);
 

@@ -8,6 +8,7 @@ export interface User {
   snsId: number;
   isSet: number; // 0と1で判断
   isPlaying: number; // 0と1で判断
+  userIcon: string;
   point: number;
   card: Card;
   createdAt: string;

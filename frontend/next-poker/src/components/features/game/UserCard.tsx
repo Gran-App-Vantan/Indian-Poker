@@ -1,6 +1,18 @@
 import Image from "next/image";
 
-export function UserCard() {
+export interface UserCardProps {
+    deviceNumber: number;
+    number: number;
+    type: string;
+    imagePath: string;
+}
+
+export function UserCard({
+    deviceNumber,
+    number,
+    type,
+    imagePath
+}: UserCardProps) {
     return (
         <div className="flex flex-col items-start  gap-2">
             <p className="text-white text-4xl font-black">
@@ -15,7 +27,7 @@ export function UserCard() {
                 />
                 <div className="flex items-center justify-center absolute top-[-20px] right-[-20px]  w-18 h-18 rounded-full bg-linear-to-r from-[#C59D4D] via-[#f5e798] to-[#7A5C2E]">
                     <Image
-                        src="/game/yuma.png"
+                        src="/icons/default-user-icon.svg"
                         width={64}
                         height={64}
                         alt="UserIcon"
