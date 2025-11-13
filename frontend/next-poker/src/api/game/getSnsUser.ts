@@ -9,6 +9,7 @@ export interface GetSnsUserResponse {
   name: string;
   userIcon: string | null;
   isParent: boolean;
+  isPlaying: boolean;
 }
 
 export async function GetSnsUser():Promise<GetSnsUserResponse> {

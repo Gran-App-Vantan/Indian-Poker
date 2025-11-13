@@ -7,7 +7,7 @@ import { useState, useEffect } from "react";
 import { Modal } from "@/components/shared/Modal";
 import { Logo, StartButton, LoginModalContent, OperationInstructions, Qr, Standby } from "@/components/features/start";
 import { Login, CreateTokenUrl, EnterGame } from "@/api/auth";
-import { GetSnsUser, GetSnsUserResponse, GetPlayingUsers, ResetConnection } from "@/api/game";
+import { GetSnsUser, GetSnsUserResponse, GetPlayingUsers, ResetConnection, ResetConnectionKeepAlive } from "@/api/game";
 import { PlayingUser } from "@/api/game";
 import { useUserContext } from "@/contexts/UserContext";
 
@@ -17,7 +17,7 @@ export default function Home() {
   const [token, setToken] = useState("");
   const [snsUser, setSnsUser] = useState<GetSnsUserResponse | null>();
   const [modalType, setModalType] = useState<"login" | "operation" | "Qr" | "standby" | "error" | null>(null);
-  const [deviceNumber, setDeviceNumber] = useState<number>(1);
+  const [deviceNumber, setDeviceNumber] = useState<number | null>(null);
   const [initialSnsId, setInitialSnsId] = useState<number | null>(null);
   const [playingUsers, setPlayingUsers] = useState<PlayingUser[]>();
 
@@ -48,6 +48,14 @@ export default function Home() {
   const handleOpenQrModal = async () => {
     try {
       console.log("QRコードモーダルを開く前に接続をリセットします");
+      
+      // 待機画面から遷移する場合は、まずモーダルを閉じる
+      if (modalType === "standby") {
+        setModalType(null);
+        // 状態更新を待つ
+        await new Promise(resolve => setTimeout(resolve, 100));
+      }
+      
       await ResetConnection();
       await getSnsUser(); // リセット後の最新状態を取得
       setModalType("Qr");
@@ -60,6 +68,11 @@ export default function Home() {
 
   // ゲストプレイ処理
   const handleGuestPlay = async () => {
+    if (deviceNumber === null) {
+      console.error("デバイス番号が設定されていません");
+      return;
+    }
+    
     try {
       console.log("ゲストとして参加します");
       await ResetConnection();
@@ -87,6 +100,7 @@ export default function Home() {
       const response = await GetPlayingUsers();
 
       if (response.success) {
+        console.log("待機中のユーザー一覧:", response.users);
         setPlayingUsers(response.users);
       } else {
         console.error("待機中のユーザーの取得に失敗しました", response.message);
@@ -101,15 +115,11 @@ export default function Home() {
     const storedDeviceNumber = localStorage.getItem("deviceNumber");
     if (storedDeviceNumber) {
       setDeviceNumber(parseInt(storedDeviceNumber, 10));
-    } else {
-      // 初回アクセス時は1を設定
-      localStorage.setItem("deviceNumber", "1");
-      setDeviceNumber(1);
     }
   }, []);
 
   useEffect(() => {
-    if (deviceNumber === 0) return; // デバイス番号が設定されるまで待つ
+    if (deviceNumber === null) return; // デバイス番号が設定されるまで待つ
     
     const login = async () => {
       try {
@@ -236,16 +246,86 @@ export default function Home() {
   useEffect(() => {
     if (modalType !== "standby") return;
 
-    getPlayingUsers();
+    let consecutiveErrors = 0;
+    const MAX_CONSECUTIVE_ERRORS = 3;
+    let pollInterval: NodeJS.Timeout | null = null;
 
-    const pollInterval = setInterval(() => {
-      getPlayingUsers();
+    const checkPlayingStatus = async () => {
+      // タブが非アクティブな場合はポーリングをスキップ
+      if (document.hidden) {
+        console.log("タブが非アクティブのため、ポーリングをスキップします");
+        return;
+      }
+
+      try {
+        // エラーカウンターをリセット
+        consecutiveErrors = 0;
+        
+        // 待機中のユーザー一覧を取得
+        await getPlayingUsers();
+      } catch (error) {
+        consecutiveErrors++;
+        console.error(`ポーリングエラー (${consecutiveErrors}/${MAX_CONSECUTIVE_ERRORS}):`, error);
+        
+        // 連続してエラーが発生した場合のみ警告
+        if (consecutiveErrors >= MAX_CONSECUTIVE_ERRORS) {
+          console.warn("連続してポーリングエラーが発生しています。接続を確認してください。");
+          // エラーが続いても待機画面は閉じない（ネットワーク一時的な問題の可能性）
+        }
+      }
+    };
+
+    // タブの可視性が変わったときの処理
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        // タブがアクティブになったら即座にチェック
+        console.log("タブがアクティブになりました。状態を確認します。");
+        checkPlayingStatus();
+      }
+    };
+
+    // 初回実行
+    checkPlayingStatus();
+
+    // ポーリング開始
+    pollInterval = setInterval(() => {
+      checkPlayingStatus();
     }, 2000);
 
+    // タブの可視性変更イベントをリッスン
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
     return () => {
-      clearInterval(pollInterval);
+      if (pollInterval) {
+        clearInterval(pollInterval);
+      }
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
   }, [modalType]);
+
+  // ページ離脱などで通信が途切れた際に接続情報を明示的にリセットする
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (!snsUser?.snsId || !snsUser?.isPlaying) return;
+
+    let hasSent = false;
+    const handleDisconnect = () => {
+      if (hasSent) return;
+      hasSent = true;
+      console.log("ページ離脱を検知したため接続をリセットします");
+      ResetConnectionKeepAlive();
+    };
+
+    window.addEventListener("beforeunload", handleDisconnect);
+    window.addEventListener("pagehide", handleDisconnect);
+    window.addEventListener("offline", handleDisconnect);
+
+    return () => {
+      window.removeEventListener("beforeunload", handleDisconnect);
+      window.removeEventListener("pagehide", handleDisconnect);
+      window.removeEventListener("offline", handleDisconnect);
+    };
+  }, [snsUser?.snsId, snsUser?.isPlaying]);
 
   return (
     <div className={`relative min-h-screen bg-cover bg-center  ${styles.bgScrollX}`}
@@ -253,7 +333,11 @@ export default function Home() {
 
       {/* デバイス番号設定UI（開発用） */}
       <div className="absolute top-4 right-4 z-50 bg-black/70 text-white p-4 rounded-lg">
-        <div className="text-sm mb-2">デバイス番号: {deviceNumber}</div>
+        <div className="text-sm mb-2">
+          {deviceNumber !== null 
+            ? `デバイス番号: ${deviceNumber}` 
+            : "デバイス番号を設定してください"}
+        </div>
         <div className="flex gap-2">
           {[1, 2, 3, 4].map((num) => (
             <button
@@ -261,7 +345,6 @@ export default function Home() {
               onClick={() => {
                 localStorage.setItem("deviceNumber", num.toString());
                 setDeviceNumber(num);
-                window.location.reload();
               }}
               className={`px-3 py-1 rounded ${
                 deviceNumber === num
@@ -311,14 +394,24 @@ export default function Home() {
       <Modal isOpen={modalType === "Qr"} >
         <Qr 
           token={token} 
-          deviceNumber={deviceNumber}
+          deviceNumber={deviceNumber ?? undefined}
         />
       </Modal>
 
       <Modal isOpen={modalType === "standby"} >
         <Standby 
           user={user ?? undefined}
-          playingUsers={playingUsers} 
+          playingUsers={playingUsers}
+          onExit={async () => {
+            console.log("待機画面から退出します");
+            // 先にモーダルを閉じてポーリングを停止
+            setModalType(null);
+            setPlayingUsers([]);
+            
+            // その後、接続をリセット
+            await ResetConnection();
+            await getSnsUser();
+          }}
         />
       </Modal>
       
@@ -326,6 +419,7 @@ export default function Home() {
       {process.env.NODE_ENV === 'development' && (
         <div className="fixed bottom-4 left-4 bg-black/80 text-white p-4 rounded-lg text-xs max-w-md z-50">
           <div className="font-bold mb-2">デバッグ情報:</div>
+          <div>deviceNumber: {deviceNumber ?? 'null'}</div>
           <div>snsUser.snsId: {snsUser?.snsId ?? 'null'}</div>
           <div>user.snsId: {user?.snsId ?? 'null'}</div>
           <div>user.name: {user?.name ?? 'null'}</div>

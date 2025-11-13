@@ -38,6 +38,13 @@ public function isPlayingUser()
                  ->with(['card'])
                  ->get();
     
+    \Log::info('待機中のユーザー取得', [
+        'リクエストユーザーID' => request()->user()->id,
+        '待機中のユーザー数' => $users->count(),
+        '待機中のユーザーID' => $users->pluck('id')->toArray(),
+        '待機中のユーザーsns_id' => $users->pluck('sns_id')->toArray(),
+    ]);
+    
     $usersWithSns = $users->map(function ($user) {
         $userData = [
             'device_number' => $user->id,

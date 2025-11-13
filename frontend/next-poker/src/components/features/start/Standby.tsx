@@ -5,11 +5,13 @@ import { User } from "@/api/auth";
 interface StandbyProps {
     playingUsers: PlayingUser[] | undefined;
     user: User | undefined;
+    onExit?: () => void;
 }
 
 export function Standby({ 
     playingUsers,
     user,
+    onExit,
 }: StandbyProps) {
     const standby = ["待機中...", "準備OK"];
     
@@ -22,6 +24,16 @@ export function Standby({
         <dialog 
             className="flex flex-col gap-14 items-center justify-center m-auto gradation-red  rounded-custom overflow-hidden  bg-black/80 w-[1094px] h-[639px]"
         >
+            {/* 戻るボタン */}
+            {onExit && (
+                <button
+                    onClick={onExit}
+                    className="absolute top-4 right-4 text-white hover:text-gray-300 text-sm font-bold px-4 py-2 bg-gray-700/50 rounded-lg hover:bg-gray-600/50 transition-colors"
+                >
+                    × 退出
+                </button>
+            )}
+            
             <ul className="flex flex-col gap-3">
                 {playingUsers?.map((playinguser, index) => {
                     const isMe = user?.snsId === playinguser.snsId;

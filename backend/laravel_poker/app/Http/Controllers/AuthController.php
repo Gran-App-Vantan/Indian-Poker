@@ -8,6 +8,7 @@ use App\Models\Card;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\DB;
 
 class AuthController extends Controller
 {
@@ -37,6 +38,7 @@ class AuthController extends Controller
             'name' => $snsUser ? $snsUser['name'] : "ゲスト{$authUser->id}",
             'user_icon' => $snsUser ? $snsUser['user_icon'] : null,
             'is_parent' => $authUser->id === 1,
+            'is_playing' => $authUser->is_playing,
         ]);
     }
 
@@ -162,39 +164,45 @@ class AuthController extends Controller
     public function resetConnection()
     {
         $authUser = request()->user();
+        $userId = $authUser->id;
+        $snsId = $authUser->sns_id;
         
-        \Log::info('接続リセット', [
-            'user_id' => $authUser->id,
-            '変更前sns_id' => $authUser->sns_id,
+        \Log::info('接続リセット開始', [
+            'user_id' => $userId,
+            '変更前sns_id' => $snsId,
+            '変更前is_playing' => $authUser->is_playing,
         ]);
         
-        // 同じsns_idで連携している他のデバイスもリセット
-        if ($authUser->sns_id) {
-            $otherUsers = User::where('sns_id', $authUser->sns_id)
-                ->where('id', '!=', $authUser->id)
-                ->get();
-            
-            foreach ($otherUsers as $otherUser) {
-                \Log::info('他のデバイスの接続をリセット', [
-                    'user_id' => $otherUser->id,
-                    'sns_id' => $otherUser->sns_id,
-                ]);
+        // トランザクション内で実行して確実にコミット
+        \DB::transaction(function () use ($userId, $snsId) {
+            // 同じsns_idで連携している他のデバイスもリセット
+            if ($snsId) {
+                User::where('sns_id', $snsId)
+                    ->where('id', '!=', $userId)
+                    ->update([
+                        'sns_id' => null,
+                        'is_playing' => false,
+                    ]);
                 
-                $otherUser->update([
-                    'sns_id' => null,
-                    'is_playing' => false,
+                \Log::info('他のデバイスの接続をリセット完了', [
+                    '対象sns_id' => $snsId,
+                    '除外user_id' => $userId,
                 ]);
             }
-        }
+            
+            // 自分自身の接続をリセット（一括更新で確実に反映）
+            User::where('id', $userId)->update([
+                'sns_id' => null,
+                'is_playing' => false,
+            ]);
+        });
         
-        // 自分自身の接続をリセット
-        $authUser->update([
-            'sns_id' => null,
-            'is_playing' => false,
-        ]);
-        
+        // リロードして変更を確認
+        $authUser->refresh();
         \Log::info('接続リセット完了', [
             'user_id' => $authUser->id,
+            '変更後sns_id' => $authUser->sns_id,
+            '変更後is_playing' => $authUser->is_playing,
         ]);
         
         return response()->json([
