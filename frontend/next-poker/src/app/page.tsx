@@ -2,24 +2,19 @@
 
 import Image from "next/image";
 import styles from "../app/StartPage.module.css"
-import Cookies from "js-cookie";
 import { useState, useEffect } from "react";
 import { Modal } from "@/components/shared/Modal";
 import { Logo, StartButton, LoginModalContent, OperationInstructions, Qr, Standby } from "@/components/features/start";
-import { Login, CreateTokenUrl, EnterGame, GetCurrentUser } from "@/api/auth";
+import { Login, CreateTokenUrl, EnterGame } from "@/api/auth";
 import { GetSnsUser, GetSnsUserResponse, GetPlayingUsers, ResetConnection, ResetConnectionKeepAlive } from "@/api/game";
 import { PlayingUser } from "@/api/game";
-import { useUserContext } from "@/contexts/UserContext";
 import { getAuthToken, setAuthToken } from "@/utils/authToken";
 
 export default function Home() {
-  const context = useUserContext();
-  const { user, fetchCurrentUser } = context || {};
   const [token, setToken] = useState("");
   const [snsUser, setSnsUser] = useState<GetSnsUserResponse | null>();
   const [modalType, setModalType] = useState<"login" | "operation" | "Qr" | "standby" | "error" | null>(null);
   const [deviceNumber, setDeviceNumber] = useState<number | null>(null);
-  const [initialSnsId, setInitialSnsId] = useState<number | null>(null);
   const [playingUsers, setPlayingUsers] = useState<PlayingUser[]>();
 
   // ユーザー情報を取得する関数
@@ -79,7 +74,8 @@ export default function Home() {
       if (response.success) {
         console.log("ゲストとして参加しました");
         await getSnsUser();
-        setModalType("standby");
+        // 操作説明画面を表示（ユーザーが読み終えたら待機画面へ）
+        setModalType("operation");
         getPlayingUsers();
       } else {
         console.error("ゲスト参加に失敗しました:", response.message);
@@ -166,7 +162,6 @@ export default function Home() {
     // QRコードモーダルを開いた時点のsnsIdとis_playingを記録
     const startingSnsId = snsUser?.snsId ?? null;
     const currentUserId = snsUser?.userId;
-    setInitialSnsId(startingSnsId);
     console.log("QRコードポーリング開始 - 初期状態:", { 
       初期snsId: startingSnsId,
       ユーザーID: currentUserId,
@@ -350,34 +345,6 @@ export default function Home() {
   return (
     <div className={`relative min-h-screen bg-cover bg-center  ${styles.bgScrollX}`}
       style={{ backgroundImage: "url('/bg-img/bgimg.svg')" }}>
-
-      {/* デバイス番号設定UI（開発用） */}
-      <div className="absolute top-4 right-4 z-50 bg-black/70 text-white p-4 rounded-lg">
-        <div className="text-sm mb-2">
-          {deviceNumber !== null 
-            ? `デバイス番号: ${deviceNumber}` 
-            : "デバイス番号を設定してください"}
-        </div>
-        <div className="flex gap-2">
-          {[1, 2, 3, 4].map((num) => (
-            <button
-              key={num}
-              onClick={() => {
-                sessionStorage.setItem("deviceNumber", num.toString());
-                setDeviceNumber(num);
-              }}
-              className={`px-3 py-1 rounded ${
-                deviceNumber === num
-                  ? "bg-blue-500"
-                  : "bg-gray-600 hover:bg-gray-500"
-              }`}
-            >
-              {num}
-            </button>
-          ))}
-        </div>
-      </div>
-
       <Logo />
         
       <div className={`absolute bottom-25 left-0 z-0  ${styles.swingImageLeft }`}>
@@ -477,22 +444,6 @@ export default function Home() {
           );
         })()}
       </Modal>
-      
-      {/* デバッグ情報 */}
-      {process.env.NODE_ENV === 'development' && (
-        <div className="fixed bottom-4 left-4 bg-black/80 text-white p-4 rounded-lg text-xs max-w-md z-50">
-          <div className="font-bold mb-2">デバッグ情報:</div>
-          <div>deviceNumber: {deviceNumber ?? 'null'}</div>
-          <div>snsUser.snsId: {snsUser?.snsId ?? 'null'}</div>
-          <div>snsUser.userId: {snsUser?.userId ?? 'null'}</div>
-          <div>snsUser.name: {snsUser?.name ?? 'null'}</div>
-          <div>待機中ユーザー数: {playingUsers?.length ?? 0}</div>
-          <div>モーダル状態: {modalType ?? 'none'}</div>
-          <div suppressHydrationWarning>
-            authToken: {typeof window !== 'undefined' ? getAuthToken(deviceNumber ?? 1)?.substring(0, 15) + '...' : '(loading)'}
-          </div>
-        </div>
-      )}
     </div>
   );
 }
