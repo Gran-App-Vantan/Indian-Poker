@@ -1,10 +1,11 @@
 import axios from "axios";
 import Cookies from "js-cookie";
+import { getAuthToken } from "@/utils/authToken";
 
 const RESET_CONNECTION_ENDPOINT = `${process.env.NEXT_PUBLIC_GAME_API_URL}/auth/reset-connection`;
 
-export async function ResetConnection(): Promise<void> {
-  const authToken = Cookies.get("authToken");
+export async function ResetConnection(deviceNumber: number): Promise<void> {
+  const authToken = getAuthToken(deviceNumber);
 
   return axios
     .post(RESET_CONNECTION_ENDPOINT, {}, {
@@ -22,8 +23,8 @@ export async function ResetConnection(): Promise<void> {
     });
 }
 
-export function ResetConnectionKeepAlive(): void {
-  const authToken = Cookies.get("authToken");
+export function ResetConnectionKeepAlive(deviceNumber: number): void {
+  const authToken = getAuthToken(deviceNumber);
 
   if (typeof window === "undefined" || !authToken) {
     return;

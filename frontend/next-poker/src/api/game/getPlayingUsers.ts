@@ -2,6 +2,7 @@ import axios from "axios";
 import Cookies from "js-cookie";
 import humps from "humps";
 import { User } from "../auth";
+import { getAuthToken } from "@/utils/authToken";
 
 export type PlayingUser = Pick<User, "id" | "deviceNumber" | "snsId" | "name" | "userIcon" | "point">;
 
@@ -16,9 +17,9 @@ export type GetPlayingUsersResponse =
     message: string;
   }
 
-export async function GetPlayingUsers():Promise<GetPlayingUsersResponse> {
+export async function GetPlayingUsers(deviceNumber: number):Promise<GetPlayingUsersResponse> {
   const apiUrl = `${process.env.NEXT_PUBLIC_GAME_API_URL}/game/is-playing-user`;
-  const authToken = Cookies.get("authToken");
+  const authToken = getAuthToken(deviceNumber);
 
   return axios
     .get(apiUrl, {

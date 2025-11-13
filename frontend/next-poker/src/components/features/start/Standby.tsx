@@ -1,10 +1,9 @@
 import { StandbyItem } from "./StandbyItem";
-import { PlayingUser } from "@/api/game";
-import { User } from "@/api/auth";
+import { PlayingUser, GetSnsUserResponse } from "@/api/game";
 
 interface StandbyProps {
     playingUsers: PlayingUser[] | undefined;
-    user: User | undefined;
+    user: GetSnsUserResponse | undefined;
     onExit?: () => void;
 }
 
@@ -19,13 +18,16 @@ export function Standby({
     const playerCount = playingUsers?.length ?? 0;
     const canStartGame = playerCount >= 2;
     const buttonText = isPlayer1 ? "ゲーム開始" : standby[0];
+    
+    // 自分が参加しているユーザーかチェック
+    const isParticipating = playingUsers?.some(p => p.snsId === user?.snsId) ?? false;
 
     return (
         <dialog 
             className="flex flex-col gap-14 items-center justify-center m-auto gradation-red  rounded-custom overflow-hidden  bg-black/80 w-[1094px] h-[639px]"
         >
-            {/* 戻るボタン */}
-            {onExit && (
+            {/* 退出ボタン - 自分が参加している場合のみ表示 */}
+            {onExit && isParticipating && (
                 <button
                     onClick={onExit}
                     className="absolute top-4 right-4 text-white hover:text-gray-300 text-sm font-bold px-4 py-2 bg-gray-700/50 rounded-lg hover:bg-gray-600/50 transition-colors"

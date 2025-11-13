@@ -16,6 +16,30 @@ class AuthController extends Controller
     public function me(Request $request)
     {
         $authUser = $request->user();
+        
+        // 同じSNS IDが別のユーザーに割り当てられていないかチェック
+        if ($authUser->sns_id) {
+            $otherUserWithSameSns = User::where('sns_id', $authUser->sns_id)
+                ->where('id', '!=', $authUser->id)
+                ->where('is_playing', true)
+                ->first();
+            
+            if ($otherUserWithSameSns) {
+                // 別のユーザーが同じSNS IDを使用している場合、現在のユーザーのSNS連携をクリア
+                \Log::warning('SNS ID が別のユーザーに割り当てられています', [
+                    'current_user_id' => $authUser->id,
+                    'other_user_id' => $otherUserWithSameSns->id,
+                    'sns_id' => $authUser->sns_id,
+                ]);
+                
+                $authUser->update([
+                    'sns_id' => null,
+                    'is_playing' => false,
+                ]);
+                $authUser->refresh();
+            }
+        }
+        
         $snsUser = null;
 
         // SNS連携済みの場合のみSNS APIを呼び出す
@@ -72,60 +96,76 @@ class AuthController extends Controller
             'point' => $request->point,
         ]);
 
-        $user = User::find($request->user_id);
-        if (!$user) {
-            \Log::error('ユーザーが見つかりません', ['user_id' => $request->user_id]);
-            return response()->json([
-                'success' => false,
-                'message' => 'ユーザーが見つかりません'
-            ], 404);
-        }
-
-        // SNSユーザーの場合、同じsns_idで既に参加中のユーザーがいないかチェック
-        if ($request->sns_id) {
-            $existingUser = User::where('sns_id', $request->sns_id)
-                ->where('is_playing', true)
-                ->where('id', '!=', $request->user_id) // 自分自身は除外
-                ->first();
+        // トランザクションとロックを使用して競合状態を防ぐ
+        return DB::transaction(function () use ($request) {
+            // 対象ユーザーを行ロックで取得
+            $user = User::where('id', $request->user_id)->lockForUpdate()->first();
             
-            if ($existingUser) {
-                // 既存の接続を切断して、新しい接続を許可する
-                \Log::info('既存の接続を切断します', [
-                    '既存user_id' => $existingUser->id,
-                    '既存sns_id' => $existingUser->sns_id,
-                    '新規user_id' => $request->user_id,
-                ]);
-                
-                $existingUser->update([
-                    'sns_id' => null,
-                    'is_playing' => false,
-                ]);
+            if (!$user) {
+                \Log::error('ユーザーが見つかりません', ['user_id' => $request->user_id]);
+                return response()->json([
+                    'success' => false,
+                    'message' => 'ユーザーが見つかりません'
+                ], 404);
             }
-        }
 
-        // ゲストの場合はsns_idとpointは送られてこない
-        $user->sns_id = $request->sns_id ?? null;
-        $user->is_playing = true;
-        if ($request->point) {
-            $user->point = $request->point;
-        }
-        $user->save();
+            // SNSユーザーの場合、同じsns_idで既に参加中のユーザーがいないかチェック
+            if ($request->sns_id) {
+                // 同じSNS IDを持つ他のユーザーを行ロックで取得
+                $existingUser = User::where('sns_id', $request->sns_id)
+                    ->where('is_playing', true)
+                    ->where('id', '!=', $request->user_id) // 自分自身は除外
+                    ->lockForUpdate()
+                    ->first();
+                
+                if ($existingUser) {
+                    // 既存の接続を切断して、新しい接続を許可する
+                    \Log::info('既存の接続を切断します', [
+                        '既存user_id' => $existingUser->id,
+                        '既存sns_id' => $existingUser->sns_id,
+                        '新規user_id' => $request->user_id,
+                    ]);
+                    
+                    $existingUser->update([
+                        'sns_id' => null,
+                        'is_playing' => false,
+                    ]);
+                }
+                
+                // 対象ユーザーが別のSNS IDを持っている場合もクリア（入れ替わり防止）
+                if ($user->sns_id && $user->sns_id !== $request->sns_id) {
+                    \Log::info('対象ユーザーの既存SNS接続をクリア', [
+                        'user_id' => $user->id,
+                        '既存sns_id' => $user->sns_id,
+                        '新規sns_id' => $request->sns_id,
+                    ]);
+                }
+            }
 
-        \Log::info('ユーザー情報更新完了', [
-            'user_id' => $user->id,
-            'sns_id' => $user->sns_id,
-            'point' => $user->point,
-        ]);
+            // ゲストの場合はsns_idとpointは送られてこない
+            $user->sns_id = $request->sns_id ?? null;
+            $user->is_playing = true;
+            if ($request->point) {
+                $user->point = $request->point;
+            }
+            $user->save();
 
-        return response()->json([
-            'success' => true,
-            'message' => 'アカウント接続が完了しました',
-            'data' => [
+            \Log::info('ユーザー情報更新完了', [
                 'user_id' => $user->id,
                 'sns_id' => $user->sns_id,
-                'point' => $user->point
-            ]
-        ]);
+                'point' => $user->point,
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'アカウント接続が完了しました',
+                'data' => [
+                    'user_id' => $user->id,
+                    'sns_id' => $user->sns_id,
+                    'point' => $user->point
+                ]
+            ]);
+        });
     }
 
     // Game Front
@@ -160,37 +200,30 @@ class AuthController extends Controller
         return response()->noContent();
     }
     
-    // QRコード表示前に接続状態をリセット
+    // 接続状態をリセット(現在のデバイスのみ)
     public function resetConnection()
     {
         $authUser = request()->user();
         $userId = $authUser->id;
-        $snsId = $authUser->sns_id;
         
-        \Log::info('接続リセット開始', [
-            'user_id' => $userId,
-            '変更前sns_id' => $snsId,
+        \Log::info('🚪 接続リセット開始', [
+            'デバイスID(user_id)' => $userId,
+            '変更前sns_id' => $authUser->sns_id,
             '変更前is_playing' => $authUser->is_playing,
+            'リクエストのIPアドレス' => request()->ip(),
+        ]);
+        
+        // 現在待機中の全ユーザーを確認
+        $allPlayingUsers = User::where('is_playing', true)->get(['id', 'sns_id']);
+        \Log::info('リセット前の待機中ユーザー一覧', [
+            'ユーザー数' => $allPlayingUsers->count(),
+            'ユーザー情報' => $allPlayingUsers->map(fn($u) => ['デバイスID' => $u->id, 'sns_id' => $u->sns_id])->toArray(),
+            '退出するデバイス' => $userId,
         ]);
         
         // トランザクション内で実行して確実にコミット
-        \DB::transaction(function () use ($userId, $snsId) {
-            // 同じsns_idで連携している他のデバイスもリセット
-            if ($snsId) {
-                User::where('sns_id', $snsId)
-                    ->where('id', '!=', $userId)
-                    ->update([
-                        'sns_id' => null,
-                        'is_playing' => false,
-                    ]);
-                
-                \Log::info('他のデバイスの接続をリセット完了', [
-                    '対象sns_id' => $snsId,
-                    '除外user_id' => $userId,
-                ]);
-            }
-            
-            // 自分自身の接続をリセット（一括更新で確実に反映）
+        \DB::transaction(function () use ($userId) {
+            // 現在のデバイスの接続のみをリセット
             User::where('id', $userId)->update([
                 'sns_id' => null,
                 'is_playing' => false,
@@ -199,10 +232,15 @@ class AuthController extends Controller
         
         // リロードして変更を確認
         $authUser->refresh();
-        \Log::info('接続リセット完了', [
-            'user_id' => $authUser->id,
+        
+        // リセット後の待機中ユーザーを確認
+        $afterPlayingUsers = User::where('is_playing', true)->get(['id', 'sns_id']);
+        \Log::info('✅ 接続リセット完了', [
+            'デバイスID' => $authUser->id,
             '変更後sns_id' => $authUser->sns_id,
             '変更後is_playing' => $authUser->is_playing,
+            'リセット後の待機中ユーザー数' => $afterPlayingUsers->count(),
+            'リセット後のユーザー情報' => $afterPlayingUsers->map(fn($u) => ['デバイスID' => $u->id, 'sns_id' => $u->sns_id])->toArray(),
         ]);
         
         return response()->json([

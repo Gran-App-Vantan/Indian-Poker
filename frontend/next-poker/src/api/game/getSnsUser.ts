@@ -1,6 +1,7 @@
 import axios from "axios";
 import Cookies from "js-cookie";
 import humps from "humps";
+import { getAuthToken } from "@/utils/authToken";
 
 export interface GetSnsUserResponse {
   userId: number;
@@ -12,9 +13,9 @@ export interface GetSnsUserResponse {
   isPlaying: boolean;
 }
 
-export async function GetSnsUser():Promise<GetSnsUserResponse> {
+export async function GetSnsUser(deviceNumber: number):Promise<GetSnsUserResponse> {
   const apiUrl = `${process.env.NEXT_PUBLIC_GAME_API_URL}/auth/me`;
-  const authToken = Cookies.get("authToken");
+  const authToken = getAuthToken(deviceNumber);
 
   return axios
     .get(apiUrl, {

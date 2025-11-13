@@ -6,10 +6,11 @@ import Cookies from "js-cookie";
 import { useState, useEffect } from "react";
 import { Modal } from "@/components/shared/Modal";
 import { Logo, StartButton, LoginModalContent, OperationInstructions, Qr, Standby } from "@/components/features/start";
-import { Login, CreateTokenUrl, EnterGame } from "@/api/auth";
+import { Login, CreateTokenUrl, EnterGame, GetCurrentUser } from "@/api/auth";
 import { GetSnsUser, GetSnsUserResponse, GetPlayingUsers, ResetConnection, ResetConnectionKeepAlive } from "@/api/game";
 import { PlayingUser } from "@/api/game";
 import { useUserContext } from "@/contexts/UserContext";
+import { getAuthToken, setAuthToken } from "@/utils/authToken";
 
 export default function Home() {
   const context = useUserContext();
@@ -24,28 +25,21 @@ export default function Home() {
   // ユーザー情報を取得する関数
   const getSnsUser = async () => {
     try {
-      const response = await GetSnsUser();
-      console.log("GetSnsUser レスポンス:", response);
-
-      setSnsUser(response);
-      if (response.snsId) {
-        console.log("SNS連携ユーザー情報の取得に成功しました:", response);
-      } else {
-        console.log("ゲストユーザーとしてログイン中:", response);
+      if (deviceNumber === null) {
+        return;
       }
-      
-      // UserContextも更新
-      if (fetchCurrentUser) {
-        await fetchCurrentUser();
-      }
+      const user = await GetSnsUser(deviceNumber);
+      setSnsUser(user);
     } catch (error) {
-      setSnsUser(null);
-      console.error("ユーザー情報の取得に失敗しました: ", error);
+      console.error("ユーザー情報の取得に失敗しました:", error);
     }
-  };
-
-  // QRコードモーダルを開く処理
+  };  // QRコードモーダルを開く処理
   const handleOpenQrModal = async () => {
+    if (deviceNumber === null) {
+      console.error("デバイス番号が設定されていません");
+      return;
+    }
+    
     try {
       console.log("QRコードモーダルを開く前に接続をリセットします");
       
@@ -56,7 +50,7 @@ export default function Home() {
         await new Promise(resolve => setTimeout(resolve, 100));
       }
       
-      await ResetConnection();
+      await ResetConnection(deviceNumber);
       await getSnsUser(); // リセット後の最新状態を取得
       setModalType("Qr");
     } catch (error) {
@@ -75,7 +69,7 @@ export default function Home() {
     
     try {
       console.log("ゲストとして参加します");
-      await ResetConnection();
+      await ResetConnection(deviceNumber);
       
       // ゲストとしてゲームに参加（sns_id, pointは渡さない）
       const response = await EnterGame({
@@ -96,8 +90,12 @@ export default function Home() {
   };
 
   const getPlayingUsers = async () => {
+    if (deviceNumber === null) {
+      return;
+    }
+    
     try {
-      const response = await GetPlayingUsers();
+      const response = await GetPlayingUsers(deviceNumber);
 
       if (response.success) {
         console.log("待機中のユーザー一覧:", response.users);
@@ -111,8 +109,8 @@ export default function Home() {
   }
 
   useEffect(() => {
-    // localStorageからデバイス番号を取得、なければデフォルト1
-    const storedDeviceNumber = localStorage.getItem("deviceNumber");
+    // sessionStorageからデバイス番号を取得、なければデフォルト1
+    const storedDeviceNumber = sessionStorage.getItem("deviceNumber");
     if (storedDeviceNumber) {
       setDeviceNumber(parseInt(storedDeviceNumber, 10));
     }
@@ -131,7 +129,8 @@ export default function Home() {
           return;
         }
 
-        Cookies.set("authToken", response.authToken);
+        // デバイスごとに異なるCookieキーを使用
+        setAuthToken(deviceNumber, response.authToken);
         
         await createTokenUrl();
       } catch (error) {
@@ -166,9 +165,11 @@ export default function Home() {
 
     // QRコードモーダルを開いた時点のsnsIdとis_playingを記録
     const startingSnsId = snsUser?.snsId ?? null;
+    const currentUserId = snsUser?.userId;
     setInitialSnsId(startingSnsId);
     console.log("QRコードポーリング開始 - 初期状態:", { 
       初期snsId: startingSnsId,
+      ユーザーID: currentUserId,
       ユーザー情報: snsUser
     });
     
@@ -193,7 +194,26 @@ export default function Home() {
       }
       
       try {
-        const response = await GetSnsUser();
+        if (deviceNumber === null) {
+          return;
+        }
+        
+        const response = await GetSnsUser(deviceNumber);
+        
+        // ユーザーIDが変わっていないか確認（入れ替わり防止）
+        if (response.userId !== currentUserId) {
+          console.error("⚠️ ユーザーIDが変わりました！セッションが入れ替わっている可能性があります", {
+            期待するユーザーID: currentUserId,
+            実際のユーザーID: response.userId,
+          });
+          clearInterval(pollInterval);
+          if (isActive) {
+            alert("セッションエラーが発生しました。ページをリロードしてください。");
+            window.location.reload();
+          }
+          return;
+        }
+        
         console.log("ポーリング結果:", {
           現在のsnsId: response.snsId,
           初期snsId: startingSnsId,
@@ -207,7 +227,7 @@ export default function Home() {
         setSnsUser(response);
         
         // 初期状態がnullの場合: snsIdがnullから変化したら遷移
-        // 初期状態がnullでない場合: is_playingがtrueになったら遷移（再接続のケース）
+        // 初期状態がnullでない場合: snsIdが変化したら遷移（再接続のケース）
         const shouldTransition = startingSnsId === null
           ? (response.snsId !== null && response.snsId !== undefined)
           : (response.snsId !== null && response.snsId !== undefined && response.snsId !== startingSnsId);
@@ -310,10 +330,10 @@ export default function Home() {
 
     let hasSent = false;
     const handleDisconnect = () => {
-      if (hasSent) return;
+      if (hasSent || deviceNumber === null) return;
       hasSent = true;
       console.log("ページ離脱を検知したため接続をリセットします");
-      ResetConnectionKeepAlive();
+      ResetConnectionKeepAlive(deviceNumber);
     };
 
     window.addEventListener("beforeunload", handleDisconnect);
@@ -343,7 +363,7 @@ export default function Home() {
             <button
               key={num}
               onClick={() => {
-                localStorage.setItem("deviceNumber", num.toString());
+                sessionStorage.setItem("deviceNumber", num.toString());
                 setDeviceNumber(num);
               }}
               className={`px-3 py-1 rounded ${
@@ -399,20 +419,63 @@ export default function Home() {
       </Modal>
 
       <Modal isOpen={modalType === "standby"} >
-        <Standby 
-          user={user ?? undefined}
-          playingUsers={playingUsers}
-          onExit={async () => {
-            console.log("待機画面から退出します");
+        {modalType === "standby" && (() => {
+          // 自分が待機中ユーザーに含まれているかチェック
+          const isParticipating = snsUser?.isPlaying || playingUsers?.some(p => p.deviceNumber === deviceNumber);
+          
+          if (!isParticipating) {
+            console.warn("⚠️ 自分は参加していないため、待機画面を表示しません", {
+              deviceNumber,
+              snsUserId: snsUser?.userId,
+              isPlaying: snsUser?.isPlaying,
+              playingUsers: playingUsers?.map(p => p.deviceNumber)
+            });
+            return (
+              <div className="flex flex-col gap-4 items-center justify-center p-8 text-white">
+                <p className="text-lg">このデバイスは現在ゲームに参加していません</p>
+                <button
+                  onClick={() => setModalType(null)}
+                  className="px-6 py-3 bg-red-600 rounded-lg hover:bg-red-700"
+                >
+                  閉じる
+                </button>
+              </div>
+            );
+          }
+          
+          return (
+            <Standby 
+              user={snsUser ?? undefined}
+              playingUsers={playingUsers}
+              onExit={async () => {
+            console.log("🚪 待機画面から退出します", {
+              現在のsnsUser: snsUser,
+              現在のデバイス: deviceNumber,
+              待機中ユーザー: playingUsers?.map(p => ({ deviceNumber: p.deviceNumber, snsId: p.snsId, name: p.name }))
+            });
+            
+            // ユーザーIDの整合性チェック
+            if (snsUser?.userId !== deviceNumber) {
+              console.error("❌ ユーザーIDとデバイス番号が一致しません!", {
+                snsUserのユーザーID: snsUser?.userId,
+                デバイス番号: deviceNumber
+              });
+              alert(`エラー: セッション不整合を検出しました。\nsnsUser.userId: ${snsUser?.userId}\ndeviceNumber: ${deviceNumber}\n\nページをリロードしてください。`);
+              return;
+            }
+            
             // 先にモーダルを閉じてポーリングを停止
             setModalType(null);
             setPlayingUsers([]);
             
             // その後、接続をリセット
-            await ResetConnection();
+            console.log("🔄 ResetConnection 呼び出し - デバイス", deviceNumber, "authToken:", getAuthToken(deviceNumber)?.substring(0, 10) + "...");
+            await ResetConnection(deviceNumber);
             await getSnsUser();
           }}
         />
+          );
+        })()}
       </Modal>
       
       {/* デバッグ情報 */}
@@ -421,10 +484,13 @@ export default function Home() {
           <div className="font-bold mb-2">デバッグ情報:</div>
           <div>deviceNumber: {deviceNumber ?? 'null'}</div>
           <div>snsUser.snsId: {snsUser?.snsId ?? 'null'}</div>
-          <div>user.snsId: {user?.snsId ?? 'null'}</div>
-          <div>user.name: {user?.name ?? 'null'}</div>
+          <div>snsUser.userId: {snsUser?.userId ?? 'null'}</div>
+          <div>snsUser.name: {snsUser?.name ?? 'null'}</div>
           <div>待機中ユーザー数: {playingUsers?.length ?? 0}</div>
           <div>モーダル状態: {modalType ?? 'none'}</div>
+          <div suppressHydrationWarning>
+            authToken: {typeof window !== 'undefined' ? getAuthToken(deviceNumber ?? 1)?.substring(0, 15) + '...' : '(loading)'}
+          </div>
         </div>
       )}
     </div>
