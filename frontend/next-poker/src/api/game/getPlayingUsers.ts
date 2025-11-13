@@ -1,5 +1,4 @@
 import axios from "axios";
-import Cookies from "js-cookie";
 import humps from "humps";
 import { User } from "../auth";
 import { getAuthToken } from "@/utils/authToken";
