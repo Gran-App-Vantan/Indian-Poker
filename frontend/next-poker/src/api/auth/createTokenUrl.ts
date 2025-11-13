@@ -1,6 +1,7 @@
 import axios from "axios";
 import humps from "humps";
 import Cookies from "js-cookie";
+import { getAuthToken } from "@/utils/authToken";
 
 export interface CreateTokenUrlRequest {
   deviceNumber: number;
@@ -22,7 +23,7 @@ export type CreateTokenUrlResponse =
 
 export async function CreateTokenUrl(req: CreateTokenUrlRequest): Promise<CreateTokenUrlResponse> {
   const apiUrl = `${process.env.NEXT_PUBLIC_GAME_API_URL}/game/create-url`;
-  const authToken = Cookies.get("authToken");
+  const authToken = getAuthToken(req.deviceNumber);
 
   return axios
     .post(apiUrl, req, {

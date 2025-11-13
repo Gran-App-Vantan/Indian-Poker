@@ -3,8 +3,8 @@
 
 
 @font-face {
-  font-family: 'DSEG14 Classic';
-  src: url('/assets/fonts/DSEG7ModernMini-Bold.woff') format('woff2'),
+  font-family: 'DSEG7 Modern';
+  src: url('/assets/fonts/DSEG7ModernMini-Bold.woff') format('woff'),
       url('/assets/fonts/DSEG7ModernMini-Bold.ttf') format('truetype');
   font-weight: normal;
   font-style: normal;
@@ -12,7 +12,7 @@
 
 :root {
   --jp-font: "Noto Sans JP", sans-serif;
-  --dseg-font: "DSEG14 Classic";
+  --dseg-font: "DSEG7 Modern", monospace;
 }
 
 body {

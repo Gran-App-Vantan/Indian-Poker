@@ -10,17 +10,20 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
 
   const fetchCurrentUser = async () => {
     try {
-      const currentUser = await GetCurrentUser();
-      setUser(currentUser);
+      // Indian Pokerゲーム側ではUserContextは使用しないため、
+      // SNS側のユーザー情報取得は行わない
+      // 必要に応じてゲーム側のsnsUserを使用する
+      console.log("UserContext: Indian PokerゲームではfetchCurrentUserをスキップします");
     } catch (error) {
       console.error("ログインしているユーザーの取得に失敗しました:", error);
       setUser(null);
     }
   }
 
-  useEffect(() => {
-    fetchCurrentUser();
-  }, []);
+  // Indian PokerではuseEffectでの自動取得をスキップ
+  // useEffect(() => {
+  //   fetchCurrentUser();
+  // }, []);
 
   return (
     <UserContext.Provider value={{ user, setUser, fetchCurrentUser }}>

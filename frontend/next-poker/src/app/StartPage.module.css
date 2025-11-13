@@ -7,11 +7,11 @@
 .bgScrollX {
     background-repeat: repeat-x;
     background-size: auto 100%;
-    animation: scrollx 40s linear infinite;
+    /* animation: scrollx 40s linear infinite; */
 }
 
 /* ライトの動き */
-.swingImageRight {
+/* .swingImageRight {
     display: block;  
     animation: swingRight 5s infinite ease-in-out; 
     transform-origin: right bottom;  
@@ -21,7 +21,7 @@
     display: block;  
     animation: swingLeft 5s infinite ease-in-out; 
     transform-origin: left bottom;   
-}
+} */
 
 @keyframes swingRight {
     0%   { transform: rotate(0deg); }

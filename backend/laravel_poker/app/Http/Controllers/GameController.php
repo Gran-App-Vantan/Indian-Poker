@@ -21,14 +21,29 @@ public function isPlayingUser()
     $myUser = request()->user();
     $myUser->is_set = $myUser->is_set ? true : false;
     unset($myUser->is_playing,$myUser->created_at,$myUser->updated_at);
-    $myUserCard = [
-        'id' => $myUser->card->id,
-        'number' => $myUser->card->number,
-        'type' => $myUser->card->type,
-        'imagePath' => $this->getCardImage($myUser->card)
-    ];
-    $myUser->hasCard = $myUserCard;
-    $users = User::where('is_playing', true)->with(['card'])->get();
+    
+    // カードが存在する場合のみカード情報を設定
+    if ($myUser->card) {
+        $myUserCard = [
+            'id' => $myUser->card->id,
+            'number' => $myUser->card->number,
+            'type' => $myUser->card->type,
+            'imagePath' => $this->getCardImage($myUser->card)
+        ];
+        $myUser->hasCard = $myUserCard;
+    } else {
+        $myUser->hasCard = null;
+    }
+    $users = User::where('is_playing', true)
+                 ->with(['card'])
+                 ->get();
+    
+    \Log::info('待機中のユーザー取得', [
+        'リクエストユーザーID' => request()->user()->id,
+        '待機中のユーザー数' => $users->count(),
+        '待機中のユーザーID' => $users->pluck('id')->toArray(),
+        '待機中のユーザーsns_id' => $users->pluck('sns_id')->toArray(),
+    ]);
     
     $usersWithSns = $users->map(function ($user) {
         $userData = [

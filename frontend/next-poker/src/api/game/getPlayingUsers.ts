@@ -1,20 +1,24 @@
 import axios from "axios";
 import Cookies from "js-cookie";
 import humps from "humps";
+import { User } from "../auth";
 import { getAuthToken } from "@/utils/authToken";
 
-export interface GetSnsUserResponse {
-  userId: number;
-  snsId: number | null;
-  point: number;
-  name: string;
-  userIcon: string | null;
-  isParent: boolean;
-  isPlaying: boolean;
-}
+export type PlayingUser = Pick<User, "id" | "deviceNumber" | "snsId" | "name" | "userIcon" | "point">;
 
-export async function GetSnsUser(deviceNumber: number):Promise<GetSnsUserResponse> {
-  const apiUrl = `${process.env.NEXT_PUBLIC_GAME_API_URL}/auth/me`;
+export type GetPlayingUsersResponse = 
+  | {
+    success: true;
+    message: string;
+    users: PlayingUser[];
+  }
+  | {
+    success: false;
+    message: string;
+  }
+
+export async function GetPlayingUsers(deviceNumber: number):Promise<GetPlayingUsersResponse> {
+  const apiUrl = `${process.env.NEXT_PUBLIC_GAME_API_URL}/game/is-playing-user`;
   const authToken = getAuthToken(deviceNumber);
 
   return axios

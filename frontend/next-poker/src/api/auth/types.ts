@@ -1,5 +1,6 @@
 export interface User {
   id: number;
+  deviceNumber: number;
   userId: number;
   snsId: number;
   point: number;
