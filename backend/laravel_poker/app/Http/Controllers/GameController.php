@@ -350,6 +350,9 @@ public function isPlayingUser()
                 'has_user_id' => null,
                 'is_in_deck' => true,
             ]);
+            
+            // ゲーム開始フラグをリセット
+            Cache::forget('is_started');
         }
         return response()->noContent();
     }

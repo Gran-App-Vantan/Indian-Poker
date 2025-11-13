@@ -8,7 +8,7 @@ import { Modal } from "@/components/shared/Modal";
 import { Logo, StartButton, LoginModalContent, OperationInstructions, Qr, Standby } from "@/components/features/start";
 import { Login, CreateTokenUrl, EnterGame } from "@/api/auth";
 import { GetSnsUser, GetSnsUserResponse, GetPlayingUsers, ResetConnection, ResetConnectionKeepAlive } from "@/api/game";
-import { GameStart } from "@/api/game";
+import { GameStart, IsGameStarted } from "@/api/game";
 import { User } from "@/api/auth";
 import { getAuthToken, setAuthToken } from "@/utils/authToken";
 
@@ -114,8 +114,8 @@ export default function Home() {
       const response = await GameStart(deviceNumber);
 
       if (response.success) {
-        console.log("ゲームを開始します");
-        router.push("/game");
+        console.log("ゲーム開始リクエストを送信しました。ポーリングで遷移を待ちます...");
+        // 親デバイスも router.push せず、ポーリングで is_started を検知して遷移する
       } else {
         console.error("ゲームの開始に失敗しました", response.message);
       }
@@ -147,6 +147,10 @@ export default function Home() {
 
         // デバイスごとに異なるCookieキーを使用
         setAuthToken(deviceNumber, response.authToken);
+        
+        // ページロード時に接続をリセットして、前回のゲーム状態をクリア
+        console.log("🔄 ページロード時: 接続をリセットします");
+        await ResetConnection(deviceNumber);
         
         await createTokenUrl();
       } catch (error) {
@@ -295,6 +299,27 @@ export default function Home() {
       try {
         // エラーカウンターをリセット
         consecutiveErrors = 0;
+        
+        // ゲーム開始状態をチェック
+        if (deviceNumber !== null) {
+          const isStarted = await IsGameStarted(deviceNumber);
+          if (isStarted) {
+            console.log("✅ ゲームが開始されました！プレイ画面に遷移します");
+            
+            // 自分がまだ is_playing 状態であることを確認
+            await getSnsUser();
+            
+            // ポーリングを停止
+            if (pollInterval) {
+              clearInterval(pollInterval);
+            }
+            // モーダルを閉じてから遷移
+            setModalType(null);
+            // プレイ画面に遷移
+            router.push("/game");
+            return;
+          }
+        }
         
         // 待機中のユーザー一覧を取得
         await getPlayingUsers();

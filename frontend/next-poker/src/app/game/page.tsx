@@ -71,32 +71,29 @@ export default function Game() {
                     <Timer />
                 </div>
 
-                <div className="absolute top-1/2 -translate-y-1/2 left-10">
-                    {/* < UserCard 
-                        deviceNumber={}
-                        number={}
-                        type={}
-                        imagePath={}
-                    /> */}
-                </div>
-
-                <div className="absolute top-40 -translate-y-1/2">
-                    {/* < UserCard 
-                        deviceNumber={}
-                        number={}
-                        type={}
-                        imagePath={}
-                    /> */}
-                </div>
-
-                <div className="absolute top-1/2 -translate-y-1/2 right-10">
-                    {/* <UserCard 
-                        deviceNumber={}
-                        number={}
-                        type={}
-                        imagePath={}
-                    /> */}
-                </div>
+                <ul>
+                    {opponentUsers.map((opponentUser, index) => {
+                        const positionStyles = [
+                            "absolute top-1/2 -translate-y-1/2 left-10",
+                            "absolute top-40 -translate-y-1/2",
+                            "absolute top-1/2 -translate-y-1/2 right-10"
+                        ];
+                        
+                        return (
+                            <li 
+                                key={opponentUser.id}
+                                className={positionStyles[index]}
+                            >
+                                <UserCard 
+                                    deviceNumber={opponentUser.deviceNumber}
+                                    number={opponentUser.card.number}
+                                    type={opponentUser.card.type}
+                                    imagePath={opponentUser.card.imagePath}
+                                />
+                            </li>
+                        );
+                    })};
+                </ul>
 
                 <div className="flex flex-col items-center gap-4 absolute bottom-4 left-1/2 -translate-x-1/2 z-10">
                     <div className="flex flex-col items-center justify-center w-40 h-40 bg-linear-to-r from-[#C59D4D] via-[#f5e798] to-[#7A5C2E] rounded-full">
