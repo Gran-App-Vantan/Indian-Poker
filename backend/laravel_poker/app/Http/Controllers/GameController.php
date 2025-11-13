@@ -21,6 +21,18 @@ public function isPlayingUser()
     $myUser = request()->user();
     $myUser->is_set = $myUser->is_set ? true : false;
     unset($myUser->is_playing,$myUser->created_at,$myUser->updated_at);
+    if ($myUser->sns_id) {
+        try {
+            $response = Http::get(config('services.dealer.api_url') . "/api/account/show/{$myUser->sns_id}");
+            if ($response->successful() && isset($response['data']['user'])) {
+                $snsUser = $response['data']['user'];
+                $myUser['name'] = $snsUser['name'] ?? $myUser['name'];
+                $myUser['user_icon'] = $snsUser['user_icon'] ?? null;
+            }
+        } catch (\Exception $e) {
+            \Log::error('SNS API error: ' . $e->getMessage());
+        }
+    }
     
     // カードが存在する場合のみカード情報を設定
     if ($myUser->card) {
