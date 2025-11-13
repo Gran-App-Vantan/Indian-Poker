@@ -8,7 +8,8 @@ import { Modal } from "@/components/shared/Modal";
 import { Logo, StartButton, LoginModalContent, OperationInstructions, Qr, Standby } from "@/components/features/start";
 import { Login, CreateTokenUrl, EnterGame } from "@/api/auth";
 import { GetSnsUser, GetSnsUserResponse, GetPlayingUsers, ResetConnection, ResetConnectionKeepAlive } from "@/api/game";
-import { PlayingUser, GameStart } from "@/api/game";
+import { GameStart } from "@/api/game";
+import { User } from "@/api/auth";
 import { getAuthToken, setAuthToken } from "@/utils/authToken";
 
 export default function Home() {
@@ -17,7 +18,7 @@ export default function Home() {
   const [snsUser, setSnsUser] = useState<GetSnsUserResponse | null>();
   const [modalType, setModalType] = useState<"login" | "operation" | "Qr" | "standby" | "error" | null>(null);
   const [deviceNumber, setDeviceNumber] = useState<number | null>(null);
-  const [playingUsers, setPlayingUsers] = useState<PlayingUser[]>();
+  const [playingUsers, setPlayingUsers] = useState<User[]>();
 
   // ユーザー情報を取得する関数
   const getSnsUser = async () => {

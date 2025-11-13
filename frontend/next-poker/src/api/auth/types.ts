@@ -1,12 +1,17 @@
+import { Card } from "../game/types";
+
 export interface User {
-  id: number;
   deviceNumber: number;
-  userId: number;
-  snsId: number;
-  point: number;
+  id: number;
   name: string;
-  userIcon: string;
-  isParent: boolean;
+  latch: number;
+  snsId: number;
+  isSet: number; // 0と1で判断
+  isPlaying: number; // 0と1で判断
+  point: number;
+  card: Card;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface UserContextType {

@@ -3,13 +3,12 @@ import humps from "humps";
 import { User } from "../auth";
 import { getAuthToken } from "@/utils/authToken";
 
-export type PlayingUser = Pick<User, "id" | "deviceNumber" | "snsId" | "name" | "userIcon" | "point">;
-
 export type GetPlayingUsersResponse = 
   | {
     success: true;
     message: string;
-    users: PlayingUser[];
+    myUser: User;
+    users: User[];
   }
   | {
     success: false;
