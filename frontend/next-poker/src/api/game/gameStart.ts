@@ -16,7 +16,7 @@ export async function GameStart(deviceNumber: number):Promise<GameStartResponse>
   const authToken = getAuthToken(deviceNumber);
 
   return axios
-    .post(apiUrl, {
+    .post(apiUrl, {}, {
       headers: {
         Authorization: `Bearer ${authToken}`,
         Accept: "application/json"

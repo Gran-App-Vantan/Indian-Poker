@@ -3,14 +3,16 @@
 import Image from "next/image";
 import styles from "../app/StartPage.module.css"
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { Modal } from "@/components/shared/Modal";
 import { Logo, StartButton, LoginModalContent, OperationInstructions, Qr, Standby } from "@/components/features/start";
 import { Login, CreateTokenUrl, EnterGame } from "@/api/auth";
 import { GetSnsUser, GetSnsUserResponse, GetPlayingUsers, ResetConnection, ResetConnectionKeepAlive } from "@/api/game";
-import { PlayingUser } from "@/api/game";
+import { PlayingUser, GameStart } from "@/api/game";
 import { getAuthToken, setAuthToken } from "@/utils/authToken";
 
 export default function Home() {
+  const router = useRouter();
   const [token, setToken] = useState("");
   const [snsUser, setSnsUser] = useState<GetSnsUserResponse | null>();
   const [modalType, setModalType] = useState<"login" | "operation" | "Qr" | "standby" | "error" | null>(null);
@@ -103,6 +105,23 @@ export default function Home() {
       console.error("エラー: ", error);
     }
   }
+
+  const handleGameStart = async () => {
+    if (deviceNumber === null) return;
+
+    try {
+      const response = await GameStart(deviceNumber);
+
+      if (response.success) {
+        console.log("ゲームを開始します");
+        router.push("/game");
+      } else {
+        console.error("ゲームの開始に失敗しました", response.message);
+      }
+    } catch (error) {
+      console.error("ゲーム開始エラー: ", error);
+    };
+  };
 
   useEffect(() => {
     // sessionStorageからデバイス番号を取得、なければデフォルト1
@@ -414,6 +433,7 @@ export default function Home() {
             <Standby 
               user={snsUser ?? undefined}
               playingUsers={playingUsers}
+              onStart={() => handleGameStart()}
               onExit={async () => {
             console.log("🚪 待機画面から退出します", {
               現在のsnsUser: snsUser,
@@ -430,6 +450,7 @@ export default function Home() {
               alert(`エラー: セッション不整合を検出しました。\nsnsUser.userId: ${snsUser?.userId}\ndeviceNumber: ${deviceNumber}\n\nページをリロードしてください。`);
               return;
             }
+            
             
             // 先にモーダルを閉じてポーリングを停止
             setModalType(null);

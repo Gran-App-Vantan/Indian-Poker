@@ -5,22 +5,25 @@ interface StandbyProps {
     playingUsers: PlayingUser[] | undefined;
     user: GetSnsUserResponse | undefined;
     onExit?: () => void;
+    onStart: () => void;
 }
 
 export function Standby({ 
     playingUsers,
     user,
     onExit,
+    onStart,
 }: StandbyProps) {
     const standby = ["待機中...", "準備OK"];
     
-    const isPlayer1 = playingUsers?.find(p => p.snsId === user?.snsId)?.deviceNumber === 1;
+    // デバイス1（親）かどうかをuserIdで判定
+    const isPlayer1 = user?.userId === 1;
     const playerCount = playingUsers?.length ?? 0;
     const canStartGame = playerCount >= 2;
     const buttonText = isPlayer1 ? "ゲーム開始" : standby[0];
     
-    // 自分が参加しているユーザーかチェック
-    const isParticipating = playingUsers?.some(p => p.snsId === user?.snsId) ?? false;
+    // 自分が参加しているユーザーかチェック（deviceNumberで判定）
+    const isParticipating = playingUsers?.some(p => p.deviceNumber === user?.userId) ?? false;
 
     return (
         <dialog 
@@ -38,7 +41,8 @@ export function Standby({
             
             <ul className="flex flex-col gap-3">
                 {playingUsers?.map((playinguser, index) => {
-                    const isMe = user?.snsId === playinguser.snsId;
+                    // ゲストユーザーの場合はsnsIdがnullなので、deviceNumber(user_id)で比較
+                    const isMe = user?.userId === playinguser.deviceNumber;
                     return (
                         <li key={index}>
                             <StandbyItem 
@@ -60,6 +64,7 @@ export function Standby({
                             ? 'bg-gray-400/40 text-gray-300 cursor-not-allowed'
                             : 'bg-[linear-gradient(90deg,_#CF5056_0%,_#770E13_50%,_#CF5056_100%)] text-white cursor-pointer'
                     }`}
+                    onClick={() => onStart()}
                 >
                     {buttonText}
                 </button>
