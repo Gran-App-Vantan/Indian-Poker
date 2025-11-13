@@ -17,6 +17,13 @@ class AuthController extends Controller
     {
         $authUser = $request->user();
         
+        // デバッグログ: どのユーザーが認証されているかを記録
+        \Log::info('👤 /auth/me 呼び出し', [
+            '認証されたユーザーID' => $authUser->id,
+            'Authorizationヘッダー' => substr($request->header('Authorization') ?? '', 0, 20) . '...',
+            'リクエストIP' => $request->ip(),
+        ]);
+        
         // 同じSNS IDが別のユーザーに割り当てられていないかチェック
         if ($authUser->sns_id) {
             $otherUserWithSameSns = User::where('sns_id', $authUser->sns_id)
@@ -76,7 +83,9 @@ class AuthController extends Controller
             ]);
         }
 
-        Auth::login($user);
+        // Auth::login($user)を削除: セッションを使わず、トークン認証のみに依存
+        // これにより、複数デバイスが同じブラウザセッションを共有することによる
+        // ユーザー入れ替わり問題を防ぐ
         return response()->json([
             'success' => true,
             'message' => 'ログインしました。',

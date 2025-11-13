@@ -22,6 +22,8 @@ class User extends Authenticatable
         'latch',
         'sns_id',
         'is_set',
+        'is_playing',
+        'point',
         'remember_token',
     ];
 
