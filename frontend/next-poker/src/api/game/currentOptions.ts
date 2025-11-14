@@ -1,22 +1,14 @@
 import axios from "axios";
 import humps from "humps";
-import { User } from "../auth";
+import { Card } from "./types";
 import { getAuthToken } from "@/utils/authToken";
 
-export type GetPlayingUsersResponse = 
-  | {
-    success: true;
-    message: string;
-    myUser: User;
-    users: User[];
-  }
-  | {
-    success: false;
-    message: string;
-  }
+export interface CurrentOptionsResponse {
+  cardOffer: Card[]
+};
 
-export async function GetPlayingUsers(deviceNumber: number | null):Promise<GetPlayingUsersResponse> {
-  const apiUrl = `${process.env.NEXT_PUBLIC_GAME_API_URL}/game/is-playing-user`;
+export async function CurrentOptions(deviceNumber: number): Promise<CurrentOptionsResponse> {
+  const apiUrl = `${process.env.NEXT_PUBLIC_GAME_API_URL}/game/current-options`;
   const authToken = getAuthToken(deviceNumber);
 
   return axios

@@ -234,6 +234,18 @@ public function isPlayingUser()
         // 管理者ユーザーだけ
         if ($authUser->id === 1) {
             Cache::put('is_started', true);
+            
+            // ゲーム開始時に全プレイヤーのis_setを0にリセット
+            User::where('is_playing', true)->update(['is_set' => 0]);
+            \Log::info('ゲーム開始: 全プレイヤーのis_setを0にリセットしました');
+            
+            // ゲーム開始前にカードを必ずデッキに戻す
+            Card::query()->update([
+                'has_user_id' => null,
+                'is_in_deck' => true,
+                'is_current_option' => false,
+            ]);
+            
             $this->distributeCards();
             return response()->json([
                 'success' => true,
@@ -296,7 +308,20 @@ public function isPlayingUser()
             ], 400);
         }
 
+        // デバッグ用: 各ユーザーの状態をログ出力
+        \Log::info('IsAllSet チェック:', [
+            'playing_users_count' => $playingUsers->count(),
+            'users' => $playingUsers->map(fn($u) => [
+                'id' => $u->id,
+                'name' => $u->name,
+                'is_playing' => $u->is_playing,
+                'is_set' => $u->is_set
+            ])->toArray()
+        ]);
+
         $allSet = $playingUsers->every(fn($user) => $user->is_set === 1);
+
+        \Log::info('IsAllSet 結果:', ['all_set' => $allSet]);
 
         return response()->json([
             'all_set' => $allSet
@@ -362,6 +387,9 @@ public function isPlayingUser()
                 'has_user_id' => null,
                 'is_in_deck' => true,
             ]);
+            
+            // ゲーム開始フラグをリセット
+            Cache::forget('is_started');
         }
         return response()->noContent();
     }
@@ -372,11 +400,29 @@ public function isPlayingUser()
             return response()->json(['message' => 'ゲームに参加していません'], 400);
         }
 
+        // 既存のcurrent_optionをリセット
+        Card::where('is_current_option', true)->update(['is_current_option' => false]);
+
+        // デバッグ: デッキ内のカード総数を確認
+        $totalCardsInDeck = Card::where('is_in_deck', true)->count();
+        $totalCurrentOptions = Card::where('is_current_option', true)->count();
+        \Log::info('currentOptions called', [
+            'user_id' => $authUser->id,
+            'total_cards_in_deck' => $totalCardsInDeck,
+            'total_current_options' => $totalCurrentOptions,
+        ]);
+
         $cardOffer = Card::where('is_in_deck', true)
         ->where('is_current_option', false)
         ->inRandomOrder()
         ->limit(4)
         ->get(['id','number','type']);
+        
+        \Log::info('cardOffer retrieved', [
+            'count' => $cardOffer->count(),
+            'cards' => $cardOffer->pluck('id')->toArray(),
+        ]);
+
         $cardOffer->each(function ($card) {
             $card->is_current_option = true;
             $card->save();

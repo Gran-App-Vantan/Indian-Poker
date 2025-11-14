@@ -244,6 +244,13 @@ class AuthController extends Controller
         
         // リセット後の待機中ユーザーを確認
         $afterPlayingUsers = User::where('is_playing', true)->get(['id', 'sns_id']);
+        
+        // 全員が退出した場合、ゲーム開始フラグもリセット
+        if ($afterPlayingUsers->isEmpty()) {
+            \Cache::forget('is_started');
+            \Log::info('🔄 全員退出したため、ゲーム開始フラグをリセットしました');
+        }
+        
         \Log::info('✅ 接続リセット完了', [
             'デバイスID' => $authUser->id,
             '変更後sns_id' => $authUser->sns_id,
