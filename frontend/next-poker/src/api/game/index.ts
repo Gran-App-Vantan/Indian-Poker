@@ -5,4 +5,5 @@ export * from "./gameStart";
 export * from "./isStarted";
 export * from "./changeLatch";
 export * from "./currentOptions";
+export * from "./cardSet";
 export * from "./types";

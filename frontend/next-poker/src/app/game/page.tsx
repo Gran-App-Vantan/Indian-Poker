@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { Timer } from "@/components/features/game/Timer";
 import { Button } from "@/components/features/game/Button";
 import { ChangeCard, UserCard, PaymentSettings } from "@/components/features/game";
-import { GetPlayingUsers, ChangeLatch, CurrentOptions, Card } from "@/api/game";
+import { GetPlayingUsers, ChangeLatch, CurrentOptions, Card, CardSet } from "@/api/game";
 import { User } from "@/api/auth";
 import { Modal } from "@/components/shared/Modal";
 
@@ -46,7 +46,7 @@ export default function Game() {
         setRemainingChanges(prev => prev - 1);
         setShowOverlay(false);
         setSelectedCardId(null);
-        // ここでカード変更のAPIを呼び出す処理を追加
+        cardSet();
     };
 
     const handleSetBet = () => {
@@ -79,6 +79,15 @@ export default function Game() {
         } catch (error) {
             console.error("カード候補の取得に失敗しました: ", error);
             setChangeCards(null);
+        }
+    }
+
+    const cardSet = async () => {
+        try {
+            const response = await CardSet();
+            console.log("カードセットに成功しました: ", response);
+        } catch (error) {
+            console.error("カードセットに失敗しました: ", error);
         }
     }
 
