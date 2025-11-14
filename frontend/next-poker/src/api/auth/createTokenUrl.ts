@@ -1,6 +1,5 @@
 import axios from "axios";
 import humps from "humps";
-import Cookies from "js-cookie";
 import { getAuthToken } from "@/utils/authToken";
 
 export interface CreateTokenUrlRequest {

@@ -6,7 +6,7 @@ import { Timer } from "@/components/features/game/Timer";
 import { Button } from "@/components/features/game/Button";
 import { ChangeCard } from "@/components/features/game/ChangeCard";
 import { UserCard } from"@/components/features/game/UserCard";
-import { GetPlayingUsers } from "@/api/game";
+import { GetPlayingUsers, ChangeLatch } from "@/api/game";
 import { User } from "@/api/auth";
 
 export default function Game() {
@@ -17,7 +17,7 @@ export default function Game() {
 
     const displayName = myUser?.name && myUser.name.trim() !== ""
         ? myUser.name
-        : "ゲストユーザー";
+        : "ゲストユーザー"; // ゲストの場合は「ゲストユーザー」と表示
 
     const handleClick = () => {
         setShowOverlay(true);
