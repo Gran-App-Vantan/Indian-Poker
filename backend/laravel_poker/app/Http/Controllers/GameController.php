@@ -375,11 +375,29 @@ public function isPlayingUser()
             return response()->json(['message' => 'ゲームに参加していません'], 400);
         }
 
+        // 既存のcurrent_optionをリセット
+        Card::where('is_current_option', true)->update(['is_current_option' => false]);
+
+        // デバッグ: デッキ内のカード総数を確認
+        $totalCardsInDeck = Card::where('is_in_deck', true)->count();
+        $totalCurrentOptions = Card::where('is_current_option', true)->count();
+        \Log::info('currentOptions called', [
+            'user_id' => $authUser->id,
+            'total_cards_in_deck' => $totalCardsInDeck,
+            'total_current_options' => $totalCurrentOptions,
+        ]);
+
         $cardOffer = Card::where('is_in_deck', true)
         ->where('is_current_option', false)
         ->inRandomOrder()
         ->limit(4)
         ->get(['id','number','type']);
+        
+        \Log::info('cardOffer retrieved', [
+            'count' => $cardOffer->count(),
+            'cards' => $cardOffer->pluck('id')->toArray(),
+        ]);
+
         $cardOffer->each(function ($card) {
             $card->is_current_option = true;
             $card->save();

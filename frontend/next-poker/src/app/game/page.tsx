@@ -1,7 +1,8 @@
 "use client";
 
 import Image from "next/image";
-import { cache, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
+import axios from "axios";
 import { Timer } from "@/components/features/game/Timer";
 import { Button } from "@/components/features/game/Button";
 import { ChangeCard, UserCard, PaymentSettings } from "@/components/features/game";
@@ -19,6 +20,7 @@ export default function Game() {
     const [betPayment, setBetPayment] = useState(0);
     const [changeCards, setChangeCards] = useState<Card[] | null>(null);
     const [remainingChanges, setRemainingChanges] = useState(2); // 変更可能回数
+    const [selectedCardId, setSelectedCardId] = useState<number | null>(null);
 
     const displayName = myUser?.name && myUser.name.trim() !== ""
         ? myUser.name
@@ -33,12 +35,18 @@ export default function Game() {
     };
 
     const handleClose = () => {
-        setShowOverlay(false); 
+        setShowOverlay(false);
+        setSelectedCardId(null); // 選択をリセット
     };
 
     const handleConfirmChange = () => {
+        if (!selectedCardId) {
+            alert("カードを選択してください");
+            return;
+        }
         setRemainingChanges(prev => prev - 1);
         setShowOverlay(false);
+        setSelectedCardId(null);
         // ここでカード変更のAPIを呼び出す処理を追加
     };
 
@@ -169,7 +177,11 @@ export default function Game() {
                 {showOverlay && (
                     <div className="fixed inset-0 flex flex-col gap-28 items-center justify-center bg-black/80 min-h-screen z-40 text-white text-5xl font-bold">
                         <p>カード選択してください</p>
-                        <ChangeCard cards={changeCards}/>
+                        <ChangeCard 
+                            cards={changeCards}
+                            selectedCardId={selectedCardId}
+                            onCardClick={setSelectedCardId}
+                        />
                         <p>残りの変更 {remainingChanges}回</p>
 
                         <div className="flex gap-5 absolute bottom-10 right-10">
