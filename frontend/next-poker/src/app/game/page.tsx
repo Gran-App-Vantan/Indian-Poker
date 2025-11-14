@@ -50,17 +50,18 @@ export default function Game() {
         changeCard(id, offers);
     };
 
-    const handleSetBet = () => {
-        setIsBetModalOpen(true);
-    };
+    const handleConfirmAll = async () => {
+        // 掛け金が設定されていない場合、モーダルを開く
+        if (betPayment === 0) {
+            setIsBetModalOpen(true);
+            return;
+        }
 
-    const handleSet = () => {
+        // 掛け金が設定済みの場合、確認してカードセット
         if (confirm("一度セットするとカードや掛け金を設定できなくなります。よろしいですか？")) {
-            cardSet();
+            await cardSet();
             setIsSet(true);
-        } else {
-            setIsSet(false);
-        };
+        }
     };
 
     const changeLatch = async (latch: number) => {
@@ -76,10 +77,17 @@ export default function Game() {
 
         try {
             const response = await ChangeLatch(deviceNumber, latch);
-
             setBetPayment(response.latch);
             setIsBetModalOpen(false);
-            alert(`掛け金の設定に成功しました: ${response.latch}`);
+            
+            // 掛け金設定後、自動的にカードセット確認
+            if (confirm("一度セットするとカードや掛け金を設定できなくなります。よろしいですか？")) {
+                await cardSet();
+                setIsSet(true);
+                alert(`掛け金 ${response.latch}P でセットしました！`);
+            } else {
+                alert(`掛け金を ${response.latch}P に設定しました`);
+            }
         } catch (error) {
             console.error("掛け金の指定に失敗しました: ", error);
             alert("掛け金の設定に失敗しました");
@@ -264,12 +272,6 @@ export default function Game() {
                     })};
                 </ul>
 
-                {!isSet && (
-                    <div className="absolute bottom-20 left-10">
-                        <Button variant="setBet" onClick={handleSetBet} />
-                    </div>
-                )}
-
                 <div className="flex flex-col items-center gap-4 absolute bottom-4 left-1/2 -translate-x-1/2 z-10">
                     <div className="flex flex-col items-center justify-center w-40 h-40 bg-linear-to-r from-[#C59D4D] via-[#f5e798] to-[#7A5C2E] rounded-full">
                         <Image
@@ -286,7 +288,7 @@ export default function Game() {
 
                 {!isSet && (
                     <div className="flex gap-5 absolute bottom-20 right-10">
-                        <Button variant="decision" onClick={handleSet}/>
+                        <Button variant="decision" onClick={handleConfirmAll}/>
                         <Button variant="change" onClick={handleClick} disabled={remainingChanges <= 0}/>
                     </div>
                 )}
