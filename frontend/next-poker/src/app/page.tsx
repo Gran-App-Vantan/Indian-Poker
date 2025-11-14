@@ -315,6 +315,13 @@ export default function Home() {
             }
             // モーダルを閉じてから遷移
             setModalType(null);
+            
+            // deviceNumberをsessionStorageに保存してから遷移
+            if (deviceNumber !== null) {
+              sessionStorage.setItem("deviceNumber", deviceNumber.toString());
+              console.log("✅ sessionStorageにdeviceNumberを保存しました:", deviceNumber);
+            }
+            
             // プレイ画面に遷移
             router.push("/game");
             return;

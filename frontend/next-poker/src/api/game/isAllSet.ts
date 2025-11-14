@@ -2,8 +2,8 @@ import axios from "axios";
 import humps from "humps";
 import { getAuthToken } from "@/utils/authToken";
 
-export async function IsAllSet(deviceNumber: number):Promise<boolean> {
-  const apiUrl = `${process.env.NEXT_PUBLI_GAME_API_URL}/game/is-all-set`;
+export async function IsAllSet(deviceNumber: number): Promise<boolean> {
+  const apiUrl = `${process.env.NEXT_PUBLIC_GAME_API_URL}/game/is-all-set`;
   const authToken = getAuthToken(deviceNumber);
 
   return axios
@@ -14,9 +14,12 @@ export async function IsAllSet(deviceNumber: number):Promise<boolean> {
       },
     })
     .then((res) => {
-      return res.data = humps.camelizeKeys(res.data) as typeof res.data;
+      const camelizedData = humps.camelizeKeys(res.data) as { allSet: boolean };
+      console.log("IsAllSet API response:", camelizedData);
+      return camelizedData.allSet;
     })
     .catch((err) => {
+      console.error("IsAllSet API error:", err);
       throw err;
     });
 };

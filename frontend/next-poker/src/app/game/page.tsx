@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { Timer } from "@/components/features/game/Timer";
 import { Button } from "@/components/features/game/Button";
 import { ChangeCard, UserCard, PaymentSettings } from "@/components/features/game";
-import { GetPlayingUsers, ChangeLatch, CurrentOptions, Card, CardSet, ChangeCardApi } from "@/api/game";
+import { GetPlayingUsers, ChangeLatch, CurrentOptions, Card, CardSet, ChangeCardApi, IsAllSet } from "@/api/game";
 import { User } from "@/api/auth";
 import { Modal } from "@/components/shared/Modal";
 
@@ -137,9 +137,29 @@ export default function Game() {
     }
 
     useEffect(() => {
+        // クライアントサイドでURLパラメータを取得
+        const params = new URLSearchParams(window.location.search);
+        const deviceNumberFromUrl = params.get("deviceNumber");
+        
+        // sessionStorageから取得を試みる
         const storedDeviceNumber = sessionStorage.getItem("deviceNumber");
-        if (storedDeviceNumber) {
-            setDeviceNumber(parseInt(storedDeviceNumber, 10));
+        
+        console.log("URL からのdeviceNumber:", deviceNumberFromUrl);
+        console.log("sessionStorage からのdeviceNumber:", storedDeviceNumber);
+        
+        if (deviceNumberFromUrl) {
+            const parsedNumber = parseInt(deviceNumberFromUrl, 10);
+            setDeviceNumber(parsedNumber);
+            // sessionStorageにも保存
+            sessionStorage.setItem("deviceNumber", parsedNumber.toString());
+            console.log("deviceNumberを設定しました (URLから):", parsedNumber);
+        } else if (storedDeviceNumber) {
+            const parsedNumber = parseInt(storedDeviceNumber, 10);
+            setDeviceNumber(parsedNumber);
+            console.log("deviceNumberを設定しました (sessionStorageから):", parsedNumber);
+        } else {
+            console.error("deviceNumberが見つかりません。URLパラメータまたはsessionStorageに保存されている必要があります。");
+            alert("デバイス番号が設定されていません。待機ページからやり直してください。");
         }
     }, []);
 
@@ -182,6 +202,38 @@ export default function Game() {
             clearInterval(intervalId);
         };
     }, [deviceNumber]);
+
+    useEffect(() => {
+        if (deviceNumber === null || !isSet) {
+            console.log("IsAllSetポーリング: スキップ", { deviceNumber, isSet });
+            return;
+        }
+
+        console.log("IsAllSetポーリング: 開始");
+        
+        const checkInterval = setInterval(async () => {
+            try {
+                console.log("IsAllSetポーリング: チェック中...");
+                const allSet = await IsAllSet(deviceNumber);
+                console.log("IsAllSetポーリング: 結果 =", allSet);
+                
+                if (allSet) {
+                    clearInterval(checkInterval);
+                    console.log("✅ 全員セット完了！");
+                    alert("全員分のカードが出揃いました！結果は...");
+                } else {
+                    console.log("⏳ まだ全員セットされていません");
+                }
+            } catch (error) {
+                console.error("IsAllSetポーリング: エラー", error);
+            }
+        }, 2000);
+
+        return () => {
+            console.log("IsAllSetポーリング: 停止");
+            clearInterval(checkInterval);
+        };
+    }, [deviceNumber, isSet]);
 
     return (
         <div className="flex items-center justify-center relative w-screen h-screen  bg-[url('/bg-img/GamePageBg.png')] bg-no-repeat bg-cover bg-center">

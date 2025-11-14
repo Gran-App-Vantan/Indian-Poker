@@ -234,6 +234,11 @@ public function isPlayingUser()
         // 管理者ユーザーだけ
         if ($authUser->id === 1) {
             Cache::put('is_started', true);
+            
+            // ゲーム開始時に全プレイヤーのis_setを0にリセット
+            User::where('is_playing', true)->update(['is_set' => 0]);
+            \Log::info('ゲーム開始: 全プレイヤーのis_setを0にリセットしました');
+            
             $this->distributeCards();
             return response()->json([
                 'success' => true,
@@ -296,7 +301,20 @@ public function isPlayingUser()
             ], 400);
         }
 
+        // デバッグ用: 各ユーザーの状態をログ出力
+        \Log::info('IsAllSet チェック:', [
+            'playing_users_count' => $playingUsers->count(),
+            'users' => $playingUsers->map(fn($u) => [
+                'id' => $u->id,
+                'name' => $u->name,
+                'is_playing' => $u->is_playing,
+                'is_set' => $u->is_set
+            ])->toArray()
+        ]);
+
         $allSet = $playingUsers->every(fn($user) => $user->is_set === 1);
+
+        \Log::info('IsAllSet 結果:', ['all_set' => $allSet]);
 
         return response()->json([
             'all_set' => $allSet
