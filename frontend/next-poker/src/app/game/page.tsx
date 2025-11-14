@@ -20,6 +20,7 @@ export default function Game() {
     const [changeCards, setChangeCards] = useState<Card[] | null>(null);
     const [remainingChanges, setRemainingChanges] = useState(2); // 変更可能回数
     const [selectedCardId, setSelectedCardId] = useState<number | null>(null);
+    const [isSet, setIsSet] = useState(false);
 
     const displayName = myUser?.name && myUser.name.trim() !== ""
         ? myUser.name
@@ -51,7 +52,16 @@ export default function Game() {
 
     const handleSetBet = () => {
         setIsBetModalOpen(true);
-    }
+    };
+
+    const handleSet = () => {
+        if (confirm("一度セットするとカードや掛け金を設定できなくなります。よろしいですか？")) {
+            cardSet();
+            setIsSet(true);
+        } else {
+            setIsSet(false);
+        };
+    };
 
     const changeLatch = async (latch: number) => {
         if (latch === 0) {
@@ -105,7 +115,7 @@ export default function Game() {
         };
 
         try {
-            const response = await ChangeCardApi(reqData);
+            await ChangeCardApi(reqData);
             console.log("カードの入れ替えに成功しました");
         } catch (error) {
             console.error("カードの入れ替えに失敗しました", error);
@@ -202,9 +212,11 @@ export default function Game() {
                     })};
                 </ul>
 
-                <div className="absolute bottom-20 left-10">
-                    <Button variant="setBet" onClick={handleSetBet} />
-                </div>
+                {!isSet && (
+                    <div className="absolute bottom-20 left-10">
+                        <Button variant="setBet" onClick={handleSetBet} />
+                    </div>
+                )}
 
                 <div className="flex flex-col items-center gap-4 absolute bottom-4 left-1/2 -translate-x-1/2 z-10">
                     <div className="flex flex-col items-center justify-center w-40 h-40 bg-linear-to-r from-[#C59D4D] via-[#f5e798] to-[#7A5C2E] rounded-full">
@@ -220,10 +232,12 @@ export default function Game() {
                     <p className="text-white text-2xl font-bold bg-black/60 px-6 py-2 rounded-lg">掛け金: {betPayment}P</p>
                 </div>
 
-                <div className="flex gap-5 absolute bottom-20 right-10">
-                    <Button variant="decision"/>
-                    <Button variant="change" onClick={handleClick} disabled={remainingChanges <= 0}/>
-                </div>
+                {!isSet && (
+                    <div className="flex gap-5 absolute bottom-20 right-10">
+                        <Button variant="decision" onClick={handleSet}/>
+                        <Button variant="change" onClick={handleClick} disabled={remainingChanges <= 0}/>
+                    </div>
+                )}
 
                 {showOverlay && (
                     <div className="fixed inset-0 flex flex-col gap-28 items-center justify-center bg-black/80 min-h-screen z-40 text-white text-5xl font-bold">
