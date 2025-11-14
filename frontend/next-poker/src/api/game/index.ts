@@ -6,4 +6,5 @@ export * from "./isStarted";
 export * from "./changeLatch";
 export * from "./currentOptions";
 export * from "./cardSet";
+export * from "./changeCard";
 export * from "./types";

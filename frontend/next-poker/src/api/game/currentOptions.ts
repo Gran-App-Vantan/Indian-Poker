@@ -1,15 +1,15 @@
 import axios from "axios";
-import Cookies from "js-cookie";
 import humps from "humps";
 import { Card } from "./types";
+import { getAuthToken } from "@/utils/authToken";
 
 export interface CurrentOptionsResponse {
   cardOffer: Card[]
 };
 
-export async function CurrentOptions(): Promise<CurrentOptionsResponse> {
+export async function CurrentOptions(deviceNumber: number): Promise<CurrentOptionsResponse> {
   const apiUrl = `${process.env.NEXT_PUBLIC_GAME_API_URL}/game/current-options`;
-  const authToken = Cookies.get("authToken");
+  const authToken = getAuthToken(deviceNumber);
 
   return axios
     .get(apiUrl, {

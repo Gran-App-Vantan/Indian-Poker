@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { Timer } from "@/components/features/game/Timer";
 import { Button } from "@/components/features/game/Button";
 import { ChangeCard, UserCard, PaymentSettings } from "@/components/features/game";
-import { GetPlayingUsers, ChangeLatch, CurrentOptions, Card, CardSet } from "@/api/game";
+import { GetPlayingUsers, ChangeLatch, CurrentOptions, Card, CardSet, ChangeCardApi } from "@/api/game";
 import { User } from "@/api/auth";
 import { Modal } from "@/components/shared/Modal";
 
@@ -20,6 +20,7 @@ export default function Game() {
     const [changeCards, setChangeCards] = useState<Card[] | null>(null);
     const [remainingChanges, setRemainingChanges] = useState(2); // 変更可能回数
     const [selectedCardId, setSelectedCardId] = useState<number | null>(null);
+    const [myCard, setMyCard] = useState<Card | null>(null);
 
     const displayName = myUser?.name && myUser.name.trim() !== ""
         ? myUser.name
@@ -38,7 +39,7 @@ export default function Game() {
         setSelectedCardId(null); // 選択をリセット
     };
 
-    const handleConfirmChange = () => {
+    const handleConfirmChange = (id: number, offers: number[]) => {
         if (!selectedCardId) {
             alert("カードを選択してください");
             return;
@@ -46,7 +47,7 @@ export default function Game() {
         setRemainingChanges(prev => prev - 1);
         setShowOverlay(false);
         setSelectedCardId(null);
-        cardSet();
+        changeCard(id, offers);
     };
 
     const handleSetBet = () => {
@@ -59,8 +60,13 @@ export default function Game() {
             return;
         }
 
+        if (deviceNumber === null) {
+            console.error("デバイス番号が設定されていません");
+            return;
+        }
+
         try {
-            const response = await ChangeLatch(latch);
+            const response = await ChangeLatch(deviceNumber, latch);
 
             setBetPayment(response.latch);
             setIsBetModalOpen(false);
@@ -72,8 +78,13 @@ export default function Game() {
     };
 
     const fetchChangeCards = async () => {
+        if (deviceNumber === null) {
+            console.error("デバイス番号が設定されていません");
+            return;
+        }
+
         try {
-            const response = await CurrentOptions();
+            const response = await CurrentOptions(deviceNumber);
             setChangeCards(response.cardOffer);
             console.log("カード候補の取得に成功しました", response.cardOffer);
         } catch (error) {
@@ -82,9 +93,36 @@ export default function Game() {
         }
     }
 
-    const cardSet = async () => {
+    const changeCard = async (id: number, offers: number[]) => {
+        if (deviceNumber === null) {
+            console.error("デバイス番号が設定されていません");
+            return;
+        }
+
+        const reqData = {
+            deviceNumber: deviceNumber,
+            cardId: id,
+            cardOffers: offers
+        };
+
         try {
-            const response = await CardSet();
+            const response = await ChangeCardApi(reqData);
+            setMyCard(response.card);
+            console.log("カードの入れ替えに成功しました");
+        } catch (error) {
+            setMyCard(null);
+            console.error("カードの入れ替えに失敗しました", error);
+        };
+    };
+
+    const cardSet = async () => {
+        if (deviceNumber === null) {
+            console.error("デバイス番号が設定されていません");
+            return;
+        }
+
+        try {
+            const response = await CardSet(deviceNumber);
             console.log("カードセットに成功しました: ", response);
         } catch (error) {
             console.error("カードセットに失敗しました: ", error);
@@ -129,6 +167,8 @@ export default function Game() {
         };
         fetchOpponentUsers();
     }, [deviceNumber]);
+
+    console.log(myCard);
 
     return (
         <div className="flex items-center justify-center relative w-screen h-screen  bg-[url('/bg-img/GamePageBg.png')] bg-no-repeat bg-cover bg-center">
@@ -193,8 +233,14 @@ export default function Game() {
                         <p>残りの変更 {remainingChanges}回</p>
 
                         <div className="flex gap-5 absolute bottom-10 right-10">
-                            <Button variant="stop" onClick={handleClose}/>
-                            <Button variant="Confirmedtochange" onClick={handleConfirmChange}/>
+                            <Button 
+                                variant="stop" 
+                                onClick={handleClose}
+                            />
+                            <Button 
+                                variant="Confirmedtochange" 
+                                onClick={() => handleConfirmChange(selectedCardId!, changeCards?.map(c => c.id) || [])}
+                            />
                         </div>
                     </div>
                 )}

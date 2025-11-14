@@ -1,9 +1,9 @@
 import axios from "axios";
-import Cookies from "js-cookie";
+import { getAuthToken } from "@/utils/authToken";
 
-export async function CardSet(): Promise<string> {
+export async function CardSet(deviceNumber: number): Promise<string> {
   const apiUrl = `${process.env.NEXT_PUBLIC_GAME_API_URL}/game/set`;
-  const authToken = Cookies.get("authToken");
+  const authToken = getAuthToken(deviceNumber);
 
   return axios
     .post(apiUrl, {}, {

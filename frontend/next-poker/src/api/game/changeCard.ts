@@ -1,9 +1,10 @@
 import axios from "axios";
-import Cookies from "js-cookie";
 import humps from "humps";
 import { Card } from "./types";
+import { getAuthToken } from "@/utils/authToken";
 
 export interface ChangeCardRequest {
+  deviceNumber: number;
   cardId: number;
   cardOffers: number[];
 }
@@ -13,12 +14,12 @@ export interface ChangeCardResponse {
   card: Card;
 }
 
-export async function ChangeCard(req: ChangeCardRequest):Promise<ChangeCardResponse> {
+export async function ChangeCardApi(req: ChangeCardRequest):Promise<ChangeCardResponse> {
   const apiUrl = `${process.env.NEXT_PUBLIC_GAME_API_URL}/game/change-card`;
-  const authToken = Cookies.get("authToken");
+  const authToken = getAuthToken(req.deviceNumber);
 
   return axios
-    .post(apiUrl, req, {
+    .post(apiUrl, humps.decamelizeKeys(req), {
       headers: {
         Authorization: `Bearer ${authToken}`,
         Accept: "application/json"
