@@ -2,14 +2,16 @@
 
 import Image from "next/image";
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Timer } from "@/components/features/game/Timer";
 import { Button } from "@/components/features/game/Button";
 import { ChangeCard, UserCard, PaymentSettings } from "@/components/features/game";
-import { GetPlayingUsers, ChangeLatch, CurrentOptions, Card, CardSet, ChangeCardApi, IsAllSet } from "@/api/game";
+import { GetPlayingUsers, ChangeLatch, CurrentOptions, Card, CardSet, ChangeCardApi, IsAllSet, Result } from "@/api/game";
 import { User } from "@/api/auth";
 import { Modal } from "@/components/shared/Modal";
 
 export default function Game() {
+    const router = useRouter();
     const [showOverlay, setShowOverlay] = useState(false);
     const [deviceNumber, setDeviceNumber] = useState<number | null>(null);
     const [myUser, setMyUser] = useState<User | null>(null);
@@ -144,32 +146,16 @@ export default function Game() {
         }
     }
 
-    useEffect(() => {
-        // クライアントサイドでURLパラメータを取得
-        const params = new URLSearchParams(window.location.search);
-        const deviceNumberFromUrl = params.get("deviceNumber");
-        
-        // sessionStorageから取得を試みる
-        const storedDeviceNumber = sessionStorage.getItem("deviceNumber");
-        
-        console.log("URL からのdeviceNumber:", deviceNumberFromUrl);
-        console.log("sessionStorage からのdeviceNumber:", storedDeviceNumber);
-        
-        if (deviceNumberFromUrl) {
-            const parsedNumber = parseInt(deviceNumberFromUrl, 10);
-            setDeviceNumber(parsedNumber);
-            // sessionStorageにも保存
-            sessionStorage.setItem("deviceNumber", parsedNumber.toString());
-            console.log("deviceNumberを設定しました (URLから):", parsedNumber);
-        } else if (storedDeviceNumber) {
-            const parsedNumber = parseInt(storedDeviceNumber, 10);
-            setDeviceNumber(parsedNumber);
-            console.log("deviceNumberを設定しました (sessionStorageから):", parsedNumber);
-        } else {
-            console.error("deviceNumberが見つかりません。URLパラメータまたはsessionStorageに保存されている必要があります。");
-            alert("デバイス番号が設定されていません。待機ページからやり直してください。");
+    const getResult = async () => {
+        if (deviceNumber === null) return;
+
+        try {
+            const response = await Result(deviceNumber);
+            router.push("/result");
+        } catch (error) {
+            console.error("リザルト取得のエラー: ", error);
         }
-    }, []);
+    }
 
     useEffect(() => {
         if (deviceNumber === null) {
@@ -228,7 +214,8 @@ export default function Game() {
                 if (allSet) {
                     clearInterval(checkInterval);
                     console.log("✅ 全員セット完了！");
-                    alert("全員分のカードが出揃いました！結果は...");
+                    
+                    getResult();
                 } else {
                     console.log("⏳ まだ全員セットされていません");
                 }
@@ -242,6 +229,26 @@ export default function Game() {
             clearInterval(checkInterval);
         };
     }, [deviceNumber, isSet]);
+
+    // copilot
+    useEffect(() => {
+        const params = new URLSearchParams(window.location.search);
+        const deviceNumberFromUrl = params.get("deviceNumber");
+        const storedDeviceNumber = sessionStorage.getItem("deviceNumber");
+        
+        if (deviceNumberFromUrl) {
+            const parsedNumber = parseInt(deviceNumberFromUrl, 10);
+            setDeviceNumber(parsedNumber);
+
+            sessionStorage.setItem("deviceNumber", parsedNumber.toString());
+        } else if (storedDeviceNumber) {
+            const parsedNumber = parseInt(storedDeviceNumber, 10);
+            setDeviceNumber(parsedNumber);
+        } else {
+            console.error("deviceNumberが見つかりません。URLパラメータまたはsessionStorageに保存されている必要があります。");
+            alert("デバイス番号が設定されていません。待機ページからやり直してください。");
+        }
+    }, []);
 
     return (
         <div className="flex items-center justify-center relative w-screen h-screen  bg-[url('/bg-img/GamePageBg.png')] bg-no-repeat bg-cover bg-center">

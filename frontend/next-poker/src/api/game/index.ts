@@ -8,4 +8,5 @@ export * from "./currentOptions";
 export * from "./cardSet";
 export * from "./changeCard";
 export * from "./isAllSet";
+export * from "./result";
 export * from "./types";
