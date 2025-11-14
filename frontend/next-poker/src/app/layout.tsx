@@ -1,5 +1,6 @@
 import "./globals.css";
 import { UserProvider } from "@/contexts/UserContext";
+import { GameResultProvider } from "@/contexts/GameResultContext";
 
 export default function RootLayout({
   children,
@@ -10,7 +11,9 @@ export default function RootLayout({
     <html lang="ja">
       <body>
         <UserProvider>
-          {children}
+          <GameResultProvider>
+            {children}
+          </GameResultProvider>
         </UserProvider>
       </body>
     </html>

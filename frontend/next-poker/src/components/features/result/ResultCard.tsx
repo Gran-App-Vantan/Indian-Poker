@@ -1,102 +1,141 @@
 import Image from "next/image";
+import { ResultResponse } from "@/api/game/result";
+
+interface ResultCardProps {
+    result: ResultResponse;
+    deviceNumber: number | null;
+}
 
 type ResultType = {
     id: number;
-    type: "winner" | "second" | "third" | "other"; // タイプ分け
+    deviceNumber: number;
+    name?: string;
+    userIcon?: string;
+    type: "winner" | "second" | "third" | "other";
     width: number;
     height: number;
     cardWidth: number;
     cardHeight: number;
     bgGradient: string;
     titleImg?: string;
-    avatar: string;
+    cardImage: string;
+    point: number;
+    latch: number;
 };
 
-const results: ResultType[] = [
-    {
-        id: 1,
-        type: "winner",
-        width: 290,
-        height: 379,
-        cardWidth: 260,
-        cardHeight: 349,
-        bgGradient: "bg-linear-to-r from-[#C59D4D] via-[#f5e798] to-[#C59D4D]",
-        titleImg: "/game/winner.svg",
-        avatar: "/game/yuma.png",
-    },
-    {
-        id: 2,
-        type: "second",
-        width: 236,
-        height: 323,
-        cardWidth: 218,
-        cardHeight: 293,
-        bgGradient: "bg-linear-to-r from-[#B2BDC8] via-[#5A6467] to-[#B2BDC8]",
-        titleImg: "/game/no2.svg",
-        avatar: "/game/yuma.png",
-    },
-    {
-        id: 3,
-        type: "third",
-        width: 222,
-        height: 304,
-        cardWidth: 204,
-        cardHeight: 274,
-        bgGradient: "bg-linear-to-r from-[#CEAF98] via-[#A3807A] to-[#CEAF98]",
-        titleImg: "/game/no3.svg",
-        avatar: "/game/yuma.png",
-    },
-    {
-        id: 4,
-        type: "other",
-        width: 204,
-        height: 274,
-        cardWidth: 204,
-        cardHeight: 274,
-        bgGradient: "", // 無地
-        avatar: "/game/yuma.png",
-    },
-];
+export function ResultCard({ result, deviceNumber }: ResultCardProps) {
+    if (!result) {
+        return <div className="text-white text-2xl">結果データがありません</div>;
+    }
 
-export function ResultCard() {
+    // ランキングデータを整形
+    const rankedPlayers: ResultType[] = result.ranking.map((rank, index) => {
+        let type: "winner" | "second" | "third" | "other";
+        let width: number;
+        let height: number;
+        let cardWidth: number;
+        let cardHeight: number;
+        let bgGradient: string;
+        let titleImg: string | undefined;
+
+        if (rank.rankPosition === 1) {
+            type = "winner";
+            width = 290;
+            height = 379;
+            cardWidth = 260;
+            cardHeight = 349;
+            bgGradient = "bg-linear-to-r from-[#C59D4D] via-[#f5e798] to-[#C59D4D]";
+            titleImg = "/game/winner.svg";
+        } else if (rank.rankPosition === 2) {
+            type = "second";
+            width = 236;
+            height = 323;
+            cardWidth = 218;
+            cardHeight = 293;
+            bgGradient = "bg-linear-to-r from-[#B2BDC8] via-[#5A6467] to-[#B2BDC8]";
+            titleImg = "/game/no2.svg";
+        } else if (rank.rankPosition === 3) {
+            type = "third";
+            width = 222;
+            height = 304;
+            cardWidth = 204;
+            cardHeight = 274;
+            bgGradient = "bg-linear-to-r from-[#CEAF98] via-[#A3807A] to-[#CEAF98]";
+            titleImg = "/game/no3.svg";
+        } else {
+            type = "other";
+            width = 204;
+            height = 274;
+            cardWidth = 204;
+            cardHeight = 274;
+            bgGradient = "";
+        }
+
+        return {
+            id: rank.id,
+            deviceNumber: rank.id,
+            type,
+            width,
+            height,
+            cardWidth,
+            cardHeight,
+            bgGradient,
+            titleImg,
+            cardImage: rank.card?.imagePath || "/game/BackSide.svg",
+            point: rank.point,
+            latch: rank.latch,
+        };
+    });
+
     return (
         <div className="flex items-center justify-center gap-10">
-        {results.map((res) => (
+        {rankedPlayers.map((player) => (
             <div
-            key={res.id}
-            className={`relative flex flex-col items-center justify-center gap-4 rounded-2xl ${res.bgGradient}`}
-            style={{ width: `${res.width}px`, height: `${res.height}px` }}
+            key={player.id}
+            className={`relative flex flex-col items-center justify-center gap-4 rounded-2xl ${player.bgGradient}`}
+            style={{ width: `${player.width}px`, height: `${player.height}px` }}
             >
-            {res.titleImg && (
+            {player.titleImg && (
                 <Image
-                src={res.titleImg}
-                width={res.type === "winner" ? 164 : 164}
-                height={res.type === "winner" ? 52 : 54}
+                src={player.titleImg}
+                width={player.type === "winner" ? 164 : 164}
+                height={player.type === "winner" ? 52 : 54}
                 alt=""
                 className="absolute top-[-20px] flex items-center justify-center shadow-inner"
                 />
             )}
 
             <Image
-                src="/game/BackSide.svg"
-                width={res.cardWidth}
-                height={res.cardHeight}
+                src={player.cardImage}
+                width={player.cardWidth}
+                height={player.cardHeight}
                 alt="PlayerCard"
             />
 
-            <div
-                className={`absolute bottom-[-45px] flex items-center justify-center w-28 h-28 rounded-full ${
-                res.bgGradient || "bg-gray"
-                }`}
-            >
-                <Image
-                src={res.avatar}
-                width={94}
-                height={94}
-                alt="PlayerAvatar"
-                className="rounded-full"
-                />
+            <div className="absolute top-2 left-2 bg-black/60 text-white px-2 py-1 rounded text-sm">
+                Device {player.deviceNumber}
             </div>
+
+            <div className="absolute bottom-2 left-2 right-2 bg-black/60 text-white px-2 py-1 rounded text-sm text-center">
+                <p>賭け金: {player.latch}P</p>
+                <p className="font-bold">獲得: {player.point}P</p>
+            </div>
+
+            {player.userIcon && (
+                <div
+                    className={`absolute bottom-[-45px] flex items-center justify-center w-28 h-28 rounded-full ${
+                    player.bgGradient || "bg-gray"
+                    }`}
+                >
+                    <Image
+                    src={player.userIcon}
+                    width={94}
+                    height={94}
+                    alt="PlayerAvatar"
+                    className="rounded-full"
+                    />
+                </div>
+            )}
             </div>
         ))}
         </div>

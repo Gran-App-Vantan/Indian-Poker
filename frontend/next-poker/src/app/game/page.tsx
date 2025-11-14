@@ -9,9 +9,11 @@ import { ChangeCard, UserCard, PaymentSettings } from "@/components/features/gam
 import { GetPlayingUsers, ChangeLatch, CurrentOptions, Card, CardSet, ChangeCardApi, IsAllSet, Result } from "@/api/game";
 import { User } from "@/api/auth";
 import { Modal } from "@/components/shared/Modal";
+import { useGameResult } from "@/contexts/GameResultContext";
 
 export default function Game() {
     const router = useRouter();
+    const { setResult } = useGameResult();
     const [showOverlay, setShowOverlay] = useState(false);
     const [deviceNumber, setDeviceNumber] = useState<number | null>(null);
     const [myUser, setMyUser] = useState<User | null>(null);
@@ -151,9 +153,16 @@ export default function Game() {
 
         try {
             const response = await Result(deviceNumber);
-            router.push("/result");
+            console.log("ゲーム結果を取得しました:", response);
+            
+            // Contextに結果を保存
+            setResult(response);
+            
+            // 結果ページへ遷移
+            router.push(`/result?deviceNumber=${deviceNumber}`);
         } catch (error) {
             console.error("リザルト取得のエラー: ", error);
+            alert("結果の取得に失敗しました");
         }
     }
 
