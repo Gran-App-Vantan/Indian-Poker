@@ -1,6 +1,6 @@
 export interface Card {
   id: number;
   number: number;
-  type: string;
+  type: "heart" | "diamond" | "spade" | "club" | "jokerRed" | "jokerBlack";
   imagePath: string;
 }
