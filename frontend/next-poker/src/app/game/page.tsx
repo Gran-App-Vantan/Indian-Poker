@@ -4,16 +4,19 @@ import Image from "next/image";
 import { useEffect, useState } from "react";
 import { Timer } from "@/components/features/game/Timer";
 import { Button } from "@/components/features/game/Button";
-import { ChangeCard } from "@/components/features/game/ChangeCard";
-import { UserCard } from"@/components/features/game/UserCard";
+import { ChangeCard, UserCard, PaymentSettings } from "@/components/features/game";
 import { GetPlayingUsers, ChangeLatch } from "@/api/game";
 import { User } from "@/api/auth";
+import { Modal } from "@/components/shared/Modal";
 
 export default function Game() {
     const [showOverlay, setShowOverlay] = useState(false);
     const [deviceNumber, setDeviceNumber] = useState<number | null>(null);
     const [myUser, setMyUser] = useState<User | null>(null);
     const [opponentUsers, setOpponentUsers] = useState<User[]>([]);
+    const [isBetModalOpen, setIsBetModalOpen] = useState(false);
+    const [betPaymentSetting, setBetPaymentSetting] = useState(0);
+    const [betPayment, setBetPayment] = useState(0);
 
     const displayName = myUser?.name && myUser.name.trim() !== ""
         ? myUser.name
@@ -28,8 +31,26 @@ export default function Game() {
     };
 
     const handleSetBet = () => {
-        console.log("")
+        setIsBetModalOpen(true);
     }
+
+    const changeLatch = async (latch: number) => {
+        if (latch === 0) {
+            alert("掛け金は0より大きい値を設定してください");
+            return;
+        }
+
+        try {
+            const response = await ChangeLatch(latch);
+
+            setBetPayment(response.latch);
+            setIsBetModalOpen(false);
+            alert(`掛け金の設定に成功しました: ${response.latch}`);
+        } catch (error) {
+            console.error("掛け金の指定に失敗しました: ", error);
+            alert("掛け金の設定に失敗しました");
+        }
+    };
 
     useEffect(() => {
         const storedDeviceNumber = sessionStorage.getItem("deviceNumber");
@@ -69,9 +90,6 @@ export default function Game() {
         };
         fetchOpponentUsers();
     }, [deviceNumber]);
-
-    console.log("My User:", myUser);
-    console.log("Opponent Users:", opponentUsers);
 
     return (
         <div className="flex items-center justify-center relative w-screen h-screen  bg-[url('/bg-img/GamePageBg.png')] bg-no-repeat bg-cover bg-center">
@@ -117,6 +135,7 @@ export default function Game() {
                         />
                     </div>
                     <p className="text-white text-4xl font-bold">{displayName} ({myUser?.id}P)</p>
+                    <p className="text-white text-2xl font-bold bg-black/60 px-6 py-2 rounded-lg">掛け金: {betPayment}P</p>
                 </div>
 
                 <div className="flex gap-5 absolute bottom-20 right-10">
@@ -134,6 +153,16 @@ export default function Game() {
                             <Button variant="Confirmedtochange" onClick={handleClose}/>
                         </div>
                     </div>
+                )}
+
+                {isBetModalOpen && (
+                    <Modal isOpen={isBetModalOpen}>
+                        <PaymentSettings 
+                            changeLatch={changeLatch}
+                            setBetPaymentSetting={setBetPaymentSetting}
+                            betPaymentSetting={betPaymentSetting}
+                        />
+                    </Modal>
                 )}
         </div>
     );

@@ -6,12 +6,12 @@ export interface ChangeLatchResponse {
   latch: number;
 }
 
-export async function ChangeLatch():Promise<ChangeLatchResponse> {
-  const apiUrl = `${process.env.NEXT_PUBLIC_GAME_AP_URL}`;
+export async function ChangeLatch(latch: number):Promise<ChangeLatchResponse> {
+  const apiUrl = `${process.env.NEXT_PUBLIC_GAME_API_URL}/game/change-latch`;
   const authToken = Cookies.get("authToken");
 
   return axios
-    .post(apiUrl, {}, {
+    .post(apiUrl, { latch }, {
       headers: {
         Authorization: `Bearer ${authToken}`,
         Accept: "application/json"
