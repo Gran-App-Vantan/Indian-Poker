@@ -18,18 +18,28 @@ export default function Game() {
     const [betPaymentSetting, setBetPaymentSetting] = useState(0);
     const [betPayment, setBetPayment] = useState(0);
     const [changeCards, setChangeCards] = useState<Card[] | null>(null);
+    const [remainingChanges, setRemainingChanges] = useState(2); // 変更可能回数
 
     const displayName = myUser?.name && myUser.name.trim() !== ""
         ? myUser.name
         : "ゲストユーザー"; // ゲストの場合は「ゲストユーザー」と表示
 
     const handleClick = () => {
+        if (remainingChanges <= 0) {
+            return; // ボタンが無効化されているので何もしない
+        }
         setShowOverlay(true);
         fetchChangeCards();
     };
 
     const handleClose = () => {
         setShowOverlay(false); 
+    };
+
+    const handleConfirmChange = () => {
+        setRemainingChanges(prev => prev - 1);
+        setShowOverlay(false);
+        // ここでカード変更のAPIを呼び出す処理を追加
     };
 
     const handleSetBet = () => {
@@ -153,18 +163,18 @@ export default function Game() {
 
                 <div className="flex gap-5 absolute bottom-20 right-10">
                     <Button variant="decision"/>
-                    <Button variant="change" onClick={handleClick}/>
+                    <Button variant="change" onClick={handleClick} disabled={remainingChanges <= 0}/>
                 </div>
 
                 {showOverlay && (
                     <div className="fixed inset-0 flex flex-col gap-28 items-center justify-center bg-black/80 min-h-screen z-40 text-white text-5xl font-bold">
-                        <p>カード選択してください</p>
+                        <p>カード選択してください</p>
                         <ChangeCard cards={changeCards}/>
-                        <p>残りの変更 n回</p>
+                        <p>残りの変更 {remainingChanges}回</p>
 
                         <div className="flex gap-5 absolute bottom-10 right-10">
                             <Button variant="stop" onClick={handleClose}/>
-                            <Button variant="Confirmedtochange" onClick={handleClose}/>
+                            <Button variant="Confirmedtochange" onClick={handleConfirmChange}/>
                         </div>
                     </div>
                 )}
