@@ -20,7 +20,6 @@ export default function Game() {
     const [changeCards, setChangeCards] = useState<Card[] | null>(null);
     const [remainingChanges, setRemainingChanges] = useState(2); // 変更可能回数
     const [selectedCardId, setSelectedCardId] = useState<number | null>(null);
-    const [myCard, setMyCard] = useState<Card | null>(null);
 
     const displayName = myUser?.name && myUser.name.trim() !== ""
         ? myUser.name
@@ -107,10 +106,8 @@ export default function Game() {
 
         try {
             const response = await ChangeCardApi(reqData);
-            setMyCard(response.card);
             console.log("カードの入れ替えに成功しました");
         } catch (error) {
-            setMyCard(null);
             console.error("カードの入れ替えに失敗しました", error);
         };
     };
@@ -141,34 +138,40 @@ export default function Game() {
             return;
         }
 
-        const fetchOpponentUsers = async () => {
+        const fetchGameData = async () => {
             try {
                 const response = await GetPlayingUsers(deviceNumber);
 
                 if (response.success) {
                     setMyUser(response.myUser);
                     
-                    // 自分以外のユーザーをフィルタリング
                     const opponents = response.users.filter(
                         user => user.deviceNumber !== deviceNumber
                     );
                     setOpponentUsers(opponents);
                     
-                    console.log("相手ユーザーの取得に成功しました", {
+                    console.log("ゲームデータの取得に成功しました", {
                         myUser: response.myUser,
                         opponentsCount: opponents.length
                     });
                 } else {
-                    console.error("相手ユーザーの取得に失敗しました: ", response.message);
+                    console.error("ゲームデータの取得に失敗しました: ", response.message);
                 }
             } catch (error) {
-                console.error("相手ユーザーの取得エラー: ", error);
+                console.error("ゲームデータの取得エラー: ", error);
             };
         };
-        fetchOpponentUsers();
-    }, [deviceNumber]);
 
-    console.log(myCard);
+        fetchGameData();
+
+        const intervalId = setInterval(() => {
+            fetchGameData();
+        }, 3000);
+
+        return () => {
+            clearInterval(intervalId);
+        };
+    }, [deviceNumber]);
 
     return (
         <div className="flex items-center justify-center relative w-screen h-screen  bg-[url('/bg-img/GamePageBg.png')] bg-no-repeat bg-cover bg-center">
