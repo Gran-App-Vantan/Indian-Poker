@@ -27,6 +27,10 @@ export default function Game() {
         setShowOverlay(false); 
     };
 
+    const handleSetBet = () => {
+        console.log("")
+    }
+
     useEffect(() => {
         const storedDeviceNumber = sessionStorage.getItem("deviceNumber");
         if (storedDeviceNumber) {
@@ -97,6 +101,10 @@ export default function Game() {
                         );
                     })};
                 </ul>
+
+                <div className="absolute bottom-20 left-10">
+                    <Button variant="setBet" onClick={handleSetBet} />
+                </div>
 
                 <div className="flex flex-col items-center gap-4 absolute bottom-4 left-1/2 -translate-x-1/2 z-10">
                     <div className="flex flex-col items-center justify-center w-40 h-40 bg-linear-to-r from-[#C59D4D] via-[#f5e798] to-[#7A5C2E] rounded-full">

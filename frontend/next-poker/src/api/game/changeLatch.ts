@@ -2,9 +2,9 @@ import axios from "axios";
 import Cookies from "js-cookie";
 
 export interface ChangeLatchResponse {
-    message: string;
-    latch: number;
-  }
+  message: string;
+  latch: number;
+}
 
 export async function ChangeLatch():Promise<ChangeLatchResponse> {
   const apiUrl = `${process.env.NEXT_PUBLIC_GAME_AP_URL}`;
