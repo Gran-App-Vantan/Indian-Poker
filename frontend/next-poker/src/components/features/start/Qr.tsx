@@ -1,7 +1,7 @@
 import { QRCodeSVG } from "qrcode.react";
 
 export function Qr({ token, deviceNumber }: { token: string; deviceNumber?: number }) {
-    const qrUrl = `http://10.79.13.206:3005/connection/${token}/`;
+    const qrUrl = `http://10.79.10.168:3005/connection/${token}/`;
     console.log("QRコード生成:", { token, deviceNumber, qrUrl });
     
     return(

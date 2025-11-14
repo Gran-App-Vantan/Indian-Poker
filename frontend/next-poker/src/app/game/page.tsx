@@ -15,6 +15,10 @@ export default function Game() {
     const [myUser, setMyUser] = useState<User | null>(null);
     const [opponentUsers, setOpponentUsers] = useState<User[]>([]);
 
+    const displayName = myUser?.name && myUser.name.trim() !== ""
+        ? myUser.name
+        : "ゲストユーザー";
+
     const handleClick = () => {
         setShowOverlay(true);
     };
@@ -81,14 +85,13 @@ export default function Game() {
                         
                         return (
                             <li 
-                                key={opponentUser.id}
+                                key={index}
                                 className={positionStyles[index]}
                             >
                                 <UserCard 
                                     deviceNumber={opponentUser.deviceNumber}
-                                    number={opponentUser.card.number}
-                                    type={opponentUser.card.type}
-                                    imagePath={opponentUser.card.imagePath}
+                                    iconSrc={opponentUser.userIcon || null}
+                                    imagePath={opponentUser.card.imagePath || undefined}
                                 />
                             </li>
                         );
@@ -101,14 +104,14 @@ export default function Game() {
                             src={myUser?.userIcon || "/icons/default-user-icon.svg"}
                             width={140}
                             height={140}
-                            alt="UserIcon"
+                            alt="my-user"
                             className="rounded-full"
                         />
                     </div>
-                    <p className="text-white text-4xl font-bold">Usename (1P)</p>
+                    <p className="text-white text-4xl font-bold">{displayName} ({myUser?.id}P)</p>
                 </div>
 
-                <div className="flex gap-5 absolute bottom-10 right-10">
+                <div className="flex gap-5 absolute bottom-20 right-10">
                     <Button variant="decision"/>
                     <Button variant="change" onClick={handleClick}/>
                 </div>
