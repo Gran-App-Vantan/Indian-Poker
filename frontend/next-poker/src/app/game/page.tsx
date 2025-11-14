@@ -1,11 +1,11 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useState } from "react";
+import { cache, useEffect, useState } from "react";
 import { Timer } from "@/components/features/game/Timer";
 import { Button } from "@/components/features/game/Button";
 import { ChangeCard, UserCard, PaymentSettings } from "@/components/features/game";
-import { GetPlayingUsers, ChangeLatch } from "@/api/game";
+import { GetPlayingUsers, ChangeLatch, CurrentOptions, Card } from "@/api/game";
 import { User } from "@/api/auth";
 import { Modal } from "@/components/shared/Modal";
 
@@ -17,6 +17,7 @@ export default function Game() {
     const [isBetModalOpen, setIsBetModalOpen] = useState(false);
     const [betPaymentSetting, setBetPaymentSetting] = useState(0);
     const [betPayment, setBetPayment] = useState(0);
+    const [changeCards, setChangeCards] = useState<Card[] | null>(null);
 
     const displayName = myUser?.name && myUser.name.trim() !== ""
         ? myUser.name
@@ -24,6 +25,7 @@ export default function Game() {
 
     const handleClick = () => {
         setShowOverlay(true);
+        fetchChangeCards();
     };
 
     const handleClose = () => {
@@ -51,6 +53,17 @@ export default function Game() {
             alert("掛け金の設定に失敗しました");
         }
     };
+
+    const fetchChangeCards = async () => {
+        try {
+            const response = await CurrentOptions();
+            setChangeCards(response.cardOffer);
+            console.log("カード候補の取得に成功しました", response.cardOffer);
+        } catch (error) {
+            console.error("カード候補の取得に失敗しました: ", error);
+            setChangeCards(null);
+        }
+    }
 
     useEffect(() => {
         const storedDeviceNumber = sessionStorage.getItem("deviceNumber");
@@ -142,10 +155,11 @@ export default function Game() {
                     <Button variant="decision"/>
                     <Button variant="change" onClick={handleClick}/>
                 </div>
+
                 {showOverlay && (
                     <div className="fixed inset-0 flex flex-col gap-28 items-center justify-center bg-black/80 min-h-screen z-40 text-white text-5xl font-bold">
                         <p>カード選択してください</p>
-                        <ChangeCard />
+                        <ChangeCard cards={changeCards}/>
                         <p>残りの変更 n回</p>
 
                         <div className="flex gap-5 absolute bottom-10 right-10">

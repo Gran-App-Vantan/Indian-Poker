@@ -4,13 +4,11 @@ import humps from "humps";
 import { Card } from "./types";
 
 export interface CurrentOptionsResponse {
-  cardOffer: [
-    Card[]
-  ]
+  cardOffer: Card[]
 };
 
 export async function CurrentOptions(): Promise<CurrentOptionsResponse> {
-  const apiUrl = `${process.env.NEXT_PUBLIC_GAME_URL}/game/current-options`;
+  const apiUrl = `${process.env.NEXT_PUBLIC_GAME_API_URL}/game/current-options`;
   const authToken = Cookies.get("authToken");
 
   return axios
