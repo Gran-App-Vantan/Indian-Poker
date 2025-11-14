@@ -23,13 +23,16 @@ type ResultType = {
     latch: number;
 };
 
-export function ResultCard({ result, deviceNumber }: ResultCardProps) {
+export function ResultCard({ 
+    result, 
+    deviceNumber 
+}: ResultCardProps) {
     if (!result) {
         return <div className="text-white text-2xl">結果データがありません</div>;
     }
 
     // ランキングデータを整形
-    const rankedPlayers: ResultType[] = result.ranking.map((rank, index) => {
+    const rankedPlayers: ResultType[] = result.ranking.map((rank) => {
         let type: "winner" | "second" | "third" | "other";
         let width: number;
         let height: number;
@@ -112,30 +115,19 @@ export function ResultCard({ result, deviceNumber }: ResultCardProps) {
                 alt="PlayerCard"
             />
 
-            <div className="absolute top-2 left-2 bg-black/60 text-white px-2 py-1 rounded text-sm">
-                Device {player.deviceNumber}
-            </div>
-
-            <div className="absolute bottom-2 left-2 right-2 bg-black/60 text-white px-2 py-1 rounded text-sm text-center">
-                <p>賭け金: {player.latch}P</p>
-                <p className="font-bold">獲得: {player.point}P</p>
-            </div>
-
-            {player.userIcon && (
-                <div
-                    className={`absolute bottom-[-45px] flex items-center justify-center w-28 h-28 rounded-full ${
-                    player.bgGradient || "bg-gray"
-                    }`}
-                >
-                    <Image
-                    src={player.userIcon}
+            <div
+                className={`absolute bottom-[-45px] flex items-center justify-center w-28 h-28 rounded-full ${
+                player.bgGradient || "bg-gray"
+                }`}
+            >
+                <Image
+                    src={player.userIcon || "/icons/default-user-icon.svg"}
                     width={94}
                     height={94}
                     alt="PlayerAvatar"
                     className="rounded-full"
-                    />
-                </div>
-            )}
+                />
+            </div>
             </div>
         ))}
         </div>

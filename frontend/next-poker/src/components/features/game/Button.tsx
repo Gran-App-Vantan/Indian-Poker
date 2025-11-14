@@ -18,7 +18,7 @@ export function Button({ variant = "change", className = "", onClick, disabled =
 
     const texts: Record<string, React.ReactNode> = {
         change: "カードを変える",
-        decision: "これでイクゥ!",
+        decision: "セットする",
         stop: "やめる",
         Confirmedtochange: "変える",
         setBet: "掛け金を決める",
