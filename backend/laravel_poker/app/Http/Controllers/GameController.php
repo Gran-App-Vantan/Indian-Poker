@@ -239,6 +239,13 @@ public function isPlayingUser()
             User::where('is_playing', true)->update(['is_set' => 0]);
             \Log::info('ゲーム開始: 全プレイヤーのis_setを0にリセットしました');
             
+            // ゲーム開始前にカードを必ずデッキに戻す
+            Card::query()->update([
+                'has_user_id' => null,
+                'is_in_deck' => true,
+                'is_current_option' => false,
+            ]);
+            
             $this->distributeCards();
             return response()->json([
                 'success' => true,

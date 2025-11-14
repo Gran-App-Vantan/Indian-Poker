@@ -106,10 +106,16 @@ export default function Game() {
 
         try {
             const response = await CurrentOptions(deviceNumber);
+            console.log("📋 CurrentOptions APIレスポンス全体:", response);
+            console.log("🎴 カード候補の配列:", response.cardOffer);
+            console.log("📊 カード候補の数:", response.cardOffer?.length || 0);
             setChangeCards(response.cardOffer);
-            console.log("カード候補の取得に成功しました", response.cardOffer);
-        } catch (error) {
-            console.error("カード候補の取得に失敗しました: ", error);
+        } catch (error: any) {
+            console.error("❌ カード候補の取得に失敗しました: ", error);
+            if (error.response) {
+                console.error("エラーレスポンス:", error.response.data);
+                console.error("ステータスコード:", error.response.status);
+            }
             setChangeCards(null);
         }
     }
