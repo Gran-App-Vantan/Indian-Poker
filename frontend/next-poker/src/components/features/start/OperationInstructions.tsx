@@ -18,43 +18,52 @@ export function OperationInstructions({
         {
             TopText:"インディアンポーカーとは",
             image:"/start/GameImage1.png",
-            imagewidth:884,
+            imagewidth:480,
             imageheight:284,
             bottomText1:"相手より高い数字のカードを予想して勝利を目指します",
             bottomText2:"みんなで話し合い騙しあいましょう",
         },
 
-        {
-            TopText:"掛金を決めよう！！",
-            image:"/start/GameImage2.png",
-            imagewidth:430,
-            imageheight:284,
-            bottomText1:"親のPCで掛金を決めれます",
-            bottomText2:"ここもみんなで話し合い掛金を決めましょう",
-        },
 
         {
             TopText:"カードが配られたら話し合おう！",
-            image:"/start/GameImage3.png",
-            imagewidth:884,
+            image:"/start/GameImage2.png",
+            imagewidth:480,
             imageheight:284,
-            bottomText1:"話し合いの時間は5分 延長ボタンで延長もできます",
+            bottomText1:"話し合いの時間は5分",
             bottomText2:"自分のカードが弱いと思ったら変更しよう",
         },
 
         {
+            TopText:"カード変更しよう！！",
+            image:"/start/GameImage6.png",
+            imagewidth:480,
+            imageheight:284,
+            bottomText1:"カードは最大2回まで交換できます",
+        },
+
+        {
             TopText:"カードの強さは？",
-            image:"/start/GameImage4.png",
-            imagewidth:430,
+            image:"/start/GameImage3.png",
+            imagewidth:480,
             imageheight:284,
             bottomText1:"左から右に向けて強くなります",
             bottomText2:"強いカードを引き当てて相手を怖がらせましょう",
         },
 
         {
+            TopText:"掛金を決めよう！！",
+            image:"/start/GameImage4.png",
+            imagewidth:480,
+            imageheight:284,
+            bottomText1:"カードを決めたら掛金を設定できます",
+            bottomText2:"よく考えて決めましょう",
+        },
+
+        {
             TopText:"勝利を目指して頑張ろう",
             image:"/start/GameImage5.png",
-            imagewidth:430,
+            imagewidth:480,
             imageheight:284,
             bottomText1:" 相手より高い数字のカードを引いて",
             bottomText2:"優勝を目指して頑張ろう!!",
