@@ -1,0 +1,38 @@
+/* 背景の横スクロールアニメーション */
+@keyframes scrollx {
+    0% { background-position-x: 0; }
+    100% { background-position-x: 1280px; } 
+}
+
+.bgScrollX {
+    background-repeat: repeat-x;
+    background-size: auto 100%;
+    /* animation: scrollx 40s linear infinite; */
+}
+
+/* ライトの動き */
+/* .swingImageRight {
+    display: block;  
+    animation: swingRight 5s infinite ease-in-out; 
+    transform-origin: right bottom;  
+}
+
+.swingImageLeft {
+    display: block;  
+    animation: swingLeft 5s infinite ease-in-out; 
+    transform-origin: left bottom;   
+} */
+
+@keyframes swingRight {
+    0%   { transform: rotate(0deg); }
+    50%  { transform: rotate(-9deg); }  
+    100% { transform: rotate(0deg); }
+}
+
+@keyframes swingLeft {
+    0%   { transform: rotate(0deg); }
+    50%  { transform: rotate(9deg); }  
+    100% { transform: rotate(0deg); }
+}
+
+

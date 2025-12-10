@@ -6,9 +6,9 @@ services:
     ports:
       - 8000:8000
   frontend:
-    build: ./frontend
+    build: ./frontend/
     volumes:
-      - ./frontend:/workdir
+      - ./frontend/:/frontend
     ports:
       - 3010:3000
   db:

@@ -1,0 +1,95 @@
+@import "tailwindcss";
+
+
+
+@font-face {
+  font-family: 'DSEG7 Modern';
+  src: url('/assets/fonts/DSEG7ModernMini-Bold.woff') format('woff'),
+      url('/assets/fonts/DSEG7ModernMini-Bold.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+
+:root {
+  --jp-font: "Noto Sans JP", sans-serif;
+  --dseg-font: "DSEG7 Modern", monospace;
+}
+
+body {
+  font-family: var(--jp-font);
+}
+
+.dseg {
+  font-family: var(--dseg-font);
+}
+
+@theme  {
+  --color-black: #262626;
+  --color-gray: #8B887A;
+  --color-brown: #7A5C2E;
+  --color-brown2: #9F8E6E;
+}
+
+
+@layer components {
+  .gradation-red  {
+    position: relative;
+    border-radius: 40px;
+    overflow: hidden;
+  }
+
+  .gradation-red::before{
+      content: "";
+    position: absolute;
+    inset: 0;
+    padding: 8px; 
+    border-radius: inherit;
+    background: linear-gradient(#770E13 0%, #CF5056 50%, #770E13 100%);
+    -webkit-mask: 
+      linear-gradient(#fff 0 0) content-box, 
+      linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+  }
+
+  .gradation-gold {
+    position: relative;
+    border-radius: 40px;
+    overflow: hidden;
+  }
+
+  .gradation-gold::before{
+      content: "";
+      position: absolute;
+      inset: 0;
+      padding: 8px; 
+      border-radius: inherit;
+      border-image: linear-gradient(#C2A800 0%, #FFED7A 40%, #FFF3A8 50%, #FFED7A 60%, #C2A800 100%);
+      -webkit-mask: 
+        linear-gradient(#fff 0 0) content-box, 
+        linear-gradient(#fff 0 0);
+      -webkit-mask-composite: xor;
+      mask-composite: exclude;
+      pointer-events: none;
+
+  }
+
+  .rounded-custom {
+    border-radius: 40px;
+  }
+
+  .text-outline {
+    -webkit-text-stroke: 0.5px black;
+  }
+
+  .BgRed {
+    background:linear-gradient(#770E13 0%, #CF5056 50%, #770E13 100%);
+  }
+
+  .BgGray{
+    background: linear-gradient(#646464 0%, #aaaaaa 50%, #646464 100%);
+  }
+
+
+}
